@@ -47,7 +47,7 @@ function estimateCost({ sqft, bedrooms, style }) {
   return { low, high, area };
 }
 
-const EXAMPLE_PROMPTS = [
+const EXAMPLES = [
   '3 BHK modern home, 1800 sqft, ground floor',
   '4 bedroom duplex villa with 2400 sqft',
   'Traditional 2 bhk house, 1200 sqft',
@@ -150,7 +150,7 @@ export default function AIBuilder({ lang }) {
           {/* Example chips */}
           <div data-reveal style={{ display: 'flex', flexWrap: 'wrap', gap: '.5rem', marginBottom: '1.25rem' }}>
             <span style={{ fontSize: '.78rem', color: '#9ca3af', alignSelf: 'center' }}>Try:</span>
-            {EXAMPLE_PROMPTS.map((ex, i) => (
+            {EXAMPLES.map((ex, i) => (
               <button key={i} onClick={() => handleExample(ex)} style={{
                 padding: '.3rem .85rem', borderRadius: 999, fontSize: '.78rem', fontWeight: 500,
                 background: '#fff', border: '1.5px solid rgba(45,106,79,.25)',
