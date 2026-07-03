@@ -25,3 +25,6 @@ npm-debug.log*
 
 # visual audit artifacts
 screenshots/
+
+# Large source masters — kept locally / in backup, never in git
+source-assets/
