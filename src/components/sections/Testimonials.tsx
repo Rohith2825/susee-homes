@@ -14,12 +14,12 @@ interface Testimonial {
   role: string;
 }
 
-/** Self-hosted open-license portraits (Unsplash) for the reel tiles. */
+/** Self-hosted portraits for the reel tiles. */
 const PORTRAITS = [
-  '/images/people/karthikeyan.jpg',
-  '/images/people/priya.jpg',
+  '/images/people/karthikeyan-2.jpg',
+  '/images/people/priya-2.jpg',
   '/images/people/anand-revathi.jpg',
-  '/images/people/ilangovan.jpg',
+  '/images/people/ilangovan-2.jpg',
 ] as const;
 
 /**

@@ -90,15 +90,16 @@ export default async function Footer() {
              the viewport. ── */}
         <div
           aria-hidden="true"
-          className="border-t border-ivory-50/10 py-[clamp(1rem,3vw,2.25rem)] [container-type:inline-size]"
+          className="border-t border-ivory-50/10 py-[clamp(0.4rem,1.4vw,1.1rem)] [container-type:inline-size]"
         >
           <div
             className="footer-mark group relative select-none text-center leading-none"
             style={{ fontFamily: 'var(--font-playfair), Georgia, serif', fontWeight: 600 }}
           >
-            {/* leading-none + a hair of top padding so the tall caps' stroke is
-                never clipped; both layers share the exact box so they align */}
-            <span className="footer-mark-outline block whitespace-nowrap pt-[0.08em] text-[clamp(2.4rem,13.5cqw,9rem)] tracking-[-0.01em]">
+            {/* pt keeps the tall caps' stroke from clipping; -mb trims the
+                serif's unused descender whitespace so the band isn't empty.
+                Both layers share the exact box so they stay aligned. */}
+            <span className="footer-mark-outline block whitespace-nowrap pt-[0.08em] -mb-[0.16em] text-[clamp(2.4rem,13.5cqw,9rem)] tracking-[-0.01em]">
               Susee Homes
             </span>
             <span className="footer-mark-fill pointer-events-none absolute inset-0 block whitespace-nowrap pt-[0.08em] text-[clamp(2.4rem,13.5cqw,9rem)] tracking-[-0.01em] opacity-0 transition-opacity duration-700 ease-out group-hover:opacity-100 group-active:opacity-100">
