@@ -1,0 +1,14 @@
+/* Hyperspeed — scoped container for the CTA road scene.
+   Everything is namespaced under .hyperspeed: a bare canvas{} rule here
+   would corrupt the site's other canvases (PixelCanvas, Boxes). */
+.hyperspeed {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+}
+
+.hyperspeed canvas {
+  width: 100%;
+  height: 100%;
+  display: block;
+}

@@ -59,6 +59,43 @@ function formatTC(s: number): string {
   return `${String(m).padStart(2, '0')}:${String(ss).padStart(2, '0')}`;
 }
 
+/** Flips true once this module has completed one Hero mount's session-entry
+ *  effect. A locale switch remounts Hero client-side (same JS execution —
+ *  this stays true), so the resumed chapter can be computed as the FIRST
+ *  render's initial state, with no "phase 1, then jump" flash. A real page
+ *  reload re-evaluates the module (this resets to false), which keeps the
+ *  initial render matching the server-rendered HTML — no hydration mismatch. */
+let heroBooted = false;
+/** Consumed once per document. On a real refresh the module re-evaluates and
+ *  this resets, so the premiere replays from the top; it persists across a
+ *  client-side locale switch, which keeps the resume-from-checkpoint path. */
+let heroDocConsumed = false;
+
+function computeInitialChapter(): number {
+  if (!heroBooted || typeof window === 'undefined') return 0;
+  try {
+    if (sessionStorage.getItem(SEEN_KEY) === '1') return 3;
+    const resumeT = parseFloat(sessionStorage.getItem(CHECKPOINT_KEY) ?? '');
+    if (Number.isFinite(resumeT) && resumeT > 0.2) {
+      let c = 0;
+      for (let i = 0; i < CHAPTER_T.length; i++) if (resumeT >= CHAPTER_T[i] - 0.02) c = i;
+      return c;
+    }
+  } catch {
+    /* sessionStorage unavailable */
+  }
+  return 0;
+}
+
+function computeInitialArrived(): boolean {
+  if (!heroBooted || typeof window === 'undefined') return false;
+  try {
+    return sessionStorage.getItem(SEEN_KEY) === '1';
+  } catch {
+    return false;
+  }
+}
+
 export default function Hero() {
   const t = useTranslations('hero');
   const stages = t.raw('stages') as Stage[];
@@ -76,11 +113,34 @@ export default function Hero() {
   const tcRef = useRef<HTMLSpanElement>(null);
   const railFillRefs = useRef<Array<HTMLDivElement | null>>([]);
 
-  const [activeIdx, setActiveIdx] = useState(0);
+  const [activeIdx, setActiveIdx] = useState(computeInitialChapter);
   const [introReady, setIntroReady] = useState(false);
-  const [arrived, setArrived] = useState(false);
-  const activeIdxRef = useRef(0);
+  const [arrived, setArrived] = useState(computeInitialArrived);
+  const activeIdxRef = useRef(activeIdx);
   const releasedRef = useRef(false);
+
+  // Mark this module as booted once — only after mount, so the FIRST
+  // render (SSR or fresh hydration) always still matches computeInitial*'s
+  // pre-boot default. Only a later remount (locale switch) sees `true`.
+  useEffect(() => {
+    heroBooted = true;
+  }, []);
+
+  // On a fresh document load / refresh, wipe the premiere's saved state so the
+  // film restarts from chapter 0. A client-side locale switch skips this (flag
+  // persists) and keeps its resume-from-checkpoint behaviour. Runs before the
+  // premiere effect below, which only fires once introReady flips after the
+  // curtain — so the cleared state is what it reads.
+  useEffect(() => {
+    if (heroDocConsumed) return;
+    heroDocConsumed = true;
+    try {
+      sessionStorage.removeItem(SEEN_KEY);
+      sessionStorage.removeItem(CHECKPOINT_KEY);
+    } catch {
+      /* sessionStorage unavailable */
+    }
+  }, []);
 
   // ── Wait for the preloader curtain before the opening reveal ──
   useEffect(() => {
@@ -517,7 +577,7 @@ export default function Hero() {
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           ref={posterRef}
-          src={CH_STILL[0]}
+          src={arrived ? FINAL_STILL : (CH_STILL[activeIdx] ?? CH_STILL[0])}
           alt=""
           aria-hidden="true"
           className="pointer-events-none absolute inset-0 h-full w-full object-cover"
@@ -545,14 +605,19 @@ export default function Hero() {
         />
 
         {/* Flowing ending (auto-detected): seamless natural-seam loop cut
-            from the film's locked fountain tail */}
+            from the film's locked fountain tail. preload="metadata" (not
+            "auto") so this ~48MB file doesn't eagerly buffer on page load and
+            fight the main film for bandwidth — it upgrades in once loadeddata
+            fires or when showEnding calls loop.play(); until then the ending
+            rests on the identical static frame. Pure load-timing win, the
+            ending looks the same. */}
         <video
           ref={loopRef}
           src={LOOP_SRC}
           muted
           loop
           playsInline
-          preload="auto"
+          preload="metadata"
           aria-hidden="true"
           className="pointer-events-none absolute inset-0 h-full w-full object-cover opacity-0"
         />
@@ -567,13 +632,17 @@ export default function Hero() {
           className="pointer-events-none absolute inset-0 h-full w-full object-cover opacity-0"
         />
 
-        {/* Cinematic grade — light-handed: the film's own golden light leads */}
+        {/* Cinematic grade — the film's golden light still leads, but the
+            grade is deepened for legibility: a stronger wash down the caption
+            side, firmer top/bottom bands behind the coordinate labels, chapter
+            rail and timecode, and a light flat scrim over the whole frame so
+            nothing is lost over bright sky. Tuned to stay cinematic, not muddy. */}
         <div
           className="pointer-events-none absolute inset-0"
           aria-hidden="true"
           style={{
             background:
-              'linear-gradient(100deg, rgba(6,10,8,0.48) 0%, rgba(6,10,8,0.16) 42%, rgba(6,10,8,0.02) 68%, transparent 100%), linear-gradient(to top, rgba(6,10,8,0.38) 0%, transparent 22%), linear-gradient(to bottom, rgba(6,10,8,0.28) 0%, transparent 14%)',
+              'linear-gradient(100deg, rgba(6,10,8,0.60) 0%, rgba(6,10,8,0.30) 40%, rgba(6,10,8,0.08) 66%, transparent 100%), linear-gradient(to top, rgba(6,10,8,0.52) 0%, transparent 26%), linear-gradient(to bottom, rgba(6,10,8,0.44) 0%, transparent 17%), linear-gradient(rgba(6,10,8,0.18), rgba(6,10,8,0.18))',
           }}
         />
 
@@ -582,8 +651,8 @@ export default function Hero() {
           data-hero-fade=""
           className="pointer-events-none absolute inset-x-0 top-[calc(var(--nav-h)+18px)] hidden justify-between px-[clamp(1.5rem,5vw,4.5rem)] md:flex"
         >
-          <span className="micro-label text-ivory-50/55">{t('coordinates')}</span>
-          <span className="micro-label text-ivory-50/55">{t('location')}</span>
+          <span className="micro-label text-ivory-50/85 [text-shadow:0_1px_10px_rgba(6,10,8,0.85)]">{t('coordinates')}</span>
+          <span className="micro-label text-ivory-50/85 [text-shadow:0_1px_10px_rgba(6,10,8,0.85)]">{t('location')}</span>
         </div>
 
         {/* ── Caption ── */}
@@ -639,7 +708,7 @@ export default function Hero() {
         {/* ── Chapter rail (desktop) — live playback fill + still previews ── */}
         <div
           data-hero-fade=""
-          className="pointer-events-none absolute inset-y-0 right-0 hidden w-[300px] bg-gradient-to-l from-ink-950/55 via-ink-950/20 to-transparent md:block"
+          className="pointer-events-none absolute inset-y-0 right-0 hidden w-[340px] bg-gradient-to-l from-ink-950/78 via-ink-950/38 to-transparent md:block"
           aria-hidden="true"
         />
         <div
@@ -668,10 +737,10 @@ export default function Hero() {
 
               <span
                 className={`micro-label whitespace-nowrap transition-colors duration-400 ${
-                  i === activeIdx ? 'text-brass-200' : 'text-ivory-50/65 group-hover:text-ivory-50'
+                  i === activeIdx ? 'text-brass-200' : 'text-ivory-50/85 group-hover:text-ivory-50'
                 }`}
               >
-                <span className="mr-2 opacity-70">{ch.index}</span>
+                <span className="mr-2 opacity-80">{ch.index}</span>
                 {ch.label}
               </span>
               <span className="relative h-10 w-px overflow-hidden bg-ivory-50/30 shadow-[0_0_10px_rgba(6,10,8,0.5)]">
@@ -689,12 +758,12 @@ export default function Hero() {
         {/* ── Bottom furniture ── */}
         <div
           data-hero-fade=""
-          className="pointer-events-none absolute bottom-7 left-[clamp(1.5rem,6vw,5rem)] hidden items-baseline gap-5 md:flex"
+          className="pointer-events-none absolute bottom-7 left-[clamp(1.5rem,6vw,5rem)] hidden items-baseline gap-5 [text-shadow:0_1px_10px_rgba(6,10,8,0.8)] md:flex"
         >
-          <span className="font-mono text-[0.72rem] tracking-[0.2em] text-ivory-50/55 tabular-nums">
+          <span className="font-mono text-[0.72rem] tracking-[0.2em] text-ivory-50/78 tabular-nums">
             {chapters[activeIdx]?.index ?? '01'} / 04
           </span>
-          <span ref={tcRef} className="font-mono text-[0.62rem] tracking-[0.16em] text-ivory-50/40 tabular-nums">
+          <span ref={tcRef} className="font-mono text-[0.62rem] tracking-[0.16em] text-ivory-50/60 tabular-nums">
             T+00:00 · 00:15
           </span>
         </div>

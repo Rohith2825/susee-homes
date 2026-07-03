@@ -37,8 +37,23 @@ export async function generateMetadata({
       title: t('title'),
       description: t('description'),
       type: 'website',
+      siteName: SITE.name,
+      url: locale === 'en' ? '/' : '/ta',
       locale: locale === 'ta' ? 'ta_IN' : 'en_IN',
-      images: ['/images/hero-poster.jpg'],
+      images: [
+        {
+          url: '/images/og.jpg',
+          width: 2400,
+          height: 1260,
+          alt: 'Susee Homes — premium plotted developments and custom homes in Poonamallee, Chennai',
+        },
+      ],
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: t('title'),
+      description: t('description'),
+      images: ['/images/og.jpg'],
     },
   };
 }
@@ -89,9 +104,13 @@ export default async function LocaleLayout({
   return (
     <html lang={locale} className={fontVariables} suppressHydrationWarning>
       <body>
-        {/* Mark JS as live before paint so reveal targets can start hidden */}
+        {/* Mark JS as live before paint so reveal targets can start hidden.
+            The opening curtain replays on every full load; only reduced-motion
+            users skip it (decided synchronously so it never even flashes). */}
         <script
-          dangerouslySetInnerHTML={{ __html: `document.documentElement.classList.add('js')` }}
+          dangerouslySetInnerHTML={{
+            __html: `document.documentElement.classList.add('js');try{if(window.matchMedia('(prefers-reduced-motion: reduce)').matches){document.documentElement.classList.add('intro-skip')}}catch(e){}`,
+          }}
         />
         <script
           type="application/ld+json"

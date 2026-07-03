@@ -1,11 +1,11 @@
 'use client';
 
-import { useCallback, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useTranslations } from 'next-intl';
-import { gsap } from 'gsap';
 import Eyebrow from '@/components/ui/Eyebrow';
 import SplitLines from '@/components/motion/SplitLines';
 import { Boxes } from '@/components/ui/background-boxes';
+import { ScrollReelTestimonials } from '@/components/ui/scroll-reel-testimonials';
 import { ANCHORS } from '@/lib/site';
 
 interface Testimonial {
@@ -14,61 +14,59 @@ interface Testimonial {
   role: string;
 }
 
+/** Self-hosted open-license portraits (Unsplash) for the reel tiles. */
+const PORTRAITS = [
+  '/images/people/karthikeyan.jpg',
+  '/images/people/priya.jpg',
+  '/images/people/anand-revathi.jpg',
+  '/images/people/ilangovan.jpg',
+] as const;
+
 /**
- * S.NO 08 — words of record. One pull-quote at a time, manually advanced,
- * 550ms crossfade. No autoplay, no stars, no avatars — just testimony.
+ * S.NO 08 — words of record. Counter-rotating portrait reel with
+ * per-character text rise, on the living survey-grid backdrop.
  */
 export default function Testimonials() {
   const t = useTranslations('testimonials');
   const items = t.raw('items') as Testimonial[];
+  const sectionRef = useRef<HTMLElement>(null);
+  // Boxes is a ~5,500-node grid; mount it only once the section nears the
+  // viewport (same pattern as CtaScene's Hyperspeed gate) so it never
+  // weighs down the initial hydration payload for a below-the-fold section.
+  const [nearViewport, setNearViewport] = useState(false);
 
-  const [idx, setIdx] = useState(0);
-  const quoteRef = useRef<HTMLDivElement>(null);
-  const busy = useRef(false);
+  useEffect(() => {
+    const host = sectionRef.current;
+    if (!host) return;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries.some((entry) => entry.isIntersecting)) {
+          setNearViewport(true); // mount once, never unmount
+          observer.disconnect();
+        }
+      },
+      { rootMargin: '400px 0px 400px 0px' }
+    );
+    observer.observe(host);
+    return () => observer.disconnect();
+  }, []);
 
-  const go = useCallback(
-    (dir: 1 | -1) => {
-      if (busy.current) return;
-      const el = quoteRef.current;
-      const next = (idx + dir + items.length) % items.length;
-
-      if (!el || window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-        setIdx(next);
-        return;
-      }
-      busy.current = true;
-      gsap.to(el, {
-        autoAlpha: 0,
-        y: -14,
-        duration: 0.26,
-        ease: 'power2.in',
-        onComplete: () => {
-          setIdx(next);
-          gsap.fromTo(
-            el,
-            { autoAlpha: 0, y: 16 },
-            {
-              autoAlpha: 1,
-              y: 0,
-              duration: 0.34,
-              ease: 'power2.out',
-              onComplete: () => {
-                busy.current = false;
-              },
-            }
-          );
-        },
-      });
-    },
-    [idx, items.length]
-  );
-
-  const item = items[idx];
+  const testimonials = items.map((item, i) => ({
+    quote: `“${item.quote}”`,
+    author: item.name,
+    role: item.role,
+    image: PORTRAITS[i % PORTRAITS.length],
+    alt: item.name,
+  }));
 
   return (
-    <section id={ANCHORS.testimonials} className="section-pad relative overflow-hidden bg-ivory-100">
+    <section
+      ref={sectionRef}
+      id={ANCHORS.testimonials}
+      className="section-pad relative overflow-hidden bg-ivory-100"
+    >
       {/* Living survey grid — tiles light up in the palette under the cursor */}
-      <Boxes />
+      {nearViewport ? <Boxes /> : null}
       {/* Vignette: quiet ivory at the edges, live tiles in the middle */}
       <div
         className="pointer-events-none absolute inset-0 z-10 bg-ivory-100 [mask-image:radial-gradient(transparent,white)]"
@@ -86,50 +84,8 @@ export default function Testimonials() {
           </div>
         </div>
 
-        <div data-reveal="" className="survey-frame pointer-events-auto relative mx-auto mt-16 max-w-3xl text-ink-900/60">
-          <span className="tick-b" aria-hidden="true" />
-          <div className="border border-[var(--hairline-dark)] bg-ivory-50 px-[clamp(1.6rem,4vw,3.5rem)] py-[clamp(2.2rem,4vw,3.5rem)]">
-            <div ref={quoteRef} aria-live="polite">
-              <blockquote className="font-display-italic min-h-[9rem] text-[clamp(1.25rem,2.2vw,1.7rem)] leading-[1.6] text-ink-900 sm:min-h-[10rem]">
-                “{item.quote}”
-              </blockquote>
-              <p className="mt-8 font-mono text-[0.7rem] uppercase tracking-[0.18em] text-fern-700">
-                {item.name}
-              </p>
-              <p className="mt-1 font-mono text-[0.62rem] uppercase tracking-[0.16em] text-text-muted">
-                {item.role}
-              </p>
-            </div>
-
-            {/* controls */}
-            <div className="mt-9 flex items-center justify-between border-t border-[var(--hairline-dark)] pt-6">
-              <span className="font-mono text-[0.7rem] tracking-[0.2em] text-text-muted tabular-nums">
-                {String(idx + 1).padStart(2, '0')} / {String(items.length).padStart(2, '0')}
-              </span>
-              <div className="flex gap-2.5">
-                <button
-                  type="button"
-                  onClick={() => go(-1)}
-                  aria-label="Previous testimonial"
-                  className="flex h-10 w-10 items-center justify-center rounded-sm border border-ink-900/20 text-ink-900/70 transition-colors duration-300 hover:border-fern-600 hover:bg-fern-600 hover:text-ivory-50"
-                >
-                  <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true">
-                    <path d="M14.5 8h-13M6.5 3l-5 5 5 5" strokeLinecap="round" strokeLinejoin="round" />
-                  </svg>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => go(1)}
-                  aria-label="Next testimonial"
-                  className="flex h-10 w-10 items-center justify-center rounded-sm border border-ink-900/20 text-ink-900/70 transition-colors duration-300 hover:border-fern-600 hover:bg-fern-600 hover:text-ivory-50"
-                >
-                  <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true">
-                    <path d="M1.5 8h13M9.5 3l5 5-5 5" strokeLinecap="round" strokeLinejoin="round" />
-                  </svg>
-                </button>
-              </div>
-            </div>
-          </div>
+        <div data-reveal="" className="pointer-events-auto mx-auto mt-16 flex justify-center">
+          <ScrollReelTestimonials testimonials={testimonials} />
         </div>
       </div>
     </section>

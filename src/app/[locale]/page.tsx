@@ -32,8 +32,8 @@ export default async function HomePage({
       <Upcoming />
       <Founder />
       <Testimonials />
-      <Faq />
       <Cta />
+      <Faq />
     </main>
   );
 }

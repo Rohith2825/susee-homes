@@ -20,13 +20,13 @@ interface Step {
 
 const STEP_ICONS = [PlotIcon, HomeIcon, BuildIcon, KeyIcon] as const;
 
-/** Chapter stills from the client's own film — land, layout, build,
- *  arrival — so every sheet's imagery is already in the site's palette. */
+/** Real photography per step — open-license (Unsplash), self-hosted:
+ *  sunlit land, architect at the drafting table, live site, keys in hand. */
 const STEP_STILLS = [
-  '/hero-frames/hq/ch-0.jpg',
-  '/hero-frames/hq/ch-1.jpg',
-  '/hero-frames/hq/ch-2.jpg',
-  '/hero-frames/hq/final.jpg',
+  '/images/steps/01-plot.jpg',
+  '/images/steps/02-design.jpg',
+  '/images/steps/03-build.jpg',
+  '/images/steps/04-movein.jpg',
 ] as const;
 
 /** Per-tone grade laid over each still so it melts into the sheet. */

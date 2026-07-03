@@ -1,4 +1,4 @@
-import { Fraunces, Archivo, IBM_Plex_Mono, Anek_Tamil } from 'next/font/google';
+import { Fraunces, Archivo, IBM_Plex_Mono, Noto_Sans_Tamil, Playfair_Display } from 'next/font/google';
 
 /** Editorial display serif — warm, architectural, ownable. */
 export const fraunces = Fraunces({
@@ -6,6 +6,16 @@ export const fraunces = Fraunces({
   display: 'swap',
   variable: '--font-fraunces',
   axes: ['opsz', 'SOFT', 'WONK'],
+});
+
+/** High-contrast display serif for the oversized signature wordmark.
+ *  preload:false — only the footer monogram uses it. */
+export const playfair = Playfair_Display({
+  subsets: ['latin'],
+  weight: ['500', '600', '700'],
+  display: 'swap',
+  preload: false,
+  variable: '--font-playfair',
 });
 
 /** Grotesque for body/UI. */
@@ -24,19 +34,21 @@ export const plexMono = IBM_Plex_Mono({
   variable: '--font-plex-mono',
 });
 
-/** Tamil — modern variable family covering display + body.
+/** Tamil — Noto Sans Tamil, covering display + body.
  *  preload:false — the file is only fetched when [lang="ta"] rules
  *  actually reference it, so English pages never download Tamil glyphs. */
-export const anekTamil = Anek_Tamil({
-  subsets: ['tamil', 'latin'],
+export const notoTamil = Noto_Sans_Tamil({
+  subsets: ['tamil'],
+  weight: ['400', '500', '600', '700'],
   display: 'swap',
   preload: false,
-  variable: '--font-anek-tamil',
+  variable: '--font-noto-tamil',
 });
 
 export const fontVariables = [
   fraunces.variable,
+  playfair.variable,
   archivo.variable,
   plexMono.variable,
-  anekTamil.variable,
+  notoTamil.variable,
 ].join(' ');

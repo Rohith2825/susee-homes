@@ -18,55 +18,26 @@ const NAV_ITEMS = [
 
 type Tone = 'dark' | 'light';
 
-/* ── Liquid-glass lens ─────────────────────────────────────────
-   iOS 26 glass isn't frosted — it REFRACTS. A displacement map
-   (R = x-offset, G = y-offset, 128 = rest) bends the backdrop in a
-   band hugging the capsule rim while the centre stays optically
-   clear. Chromium renders it through backdrop-filter: url(#nav-lens);
-   Safari/Firefox can't run url() backdrop filters, so they keep the
-   frosted fallback in navbar.css. */
+/* ── iOS 26 liquid glass — the polished droplet ────────────────
+   No noise, no turbulence: a SMOOTH gradient displacement map (the
+   capsule as a lens) bends the backdrop hard at the curved edges and
+   leaves the centre optically calm, exactly like Apple's material.
+   Scroll velocity deepens the refraction (liquid drag). Chromium
+   renders it through backdrop-filter: url(#nav-liquid); Safari and
+   Firefox keep the frosted fallback with the same gloss chrome. */
 
-const LENS_SCALE = 58; // rim displacement at rest, px
-const LENS_MAX_BOOST = 55; // extra displacement under fast scroll (liquid drag)
-const LENS_EDGE = 20; // width of the refracting band, px
-// Chromatic aberration — each channel refracts a little differently
-const LENS_RGB = [1.14, 1, 0.86] as const;
+const LIQUID_SCALE = -120; // distortion at rest (negative pulls inward)
+const LIQUID_MAX_BOOST = 55; // extra distortion under fast scroll
+const LIQUID_OFFSETS = [0, 5, 10] as const; // chromatic split per channel
 
-function buildLensMap(w: number, h: number): string {
-  const canvas = document.createElement('canvas');
-  canvas.width = w;
-  canvas.height = h;
-  const ctx = canvas.getContext('2d');
-  if (!ctx) return '';
-  const img = ctx.createImageData(w, h);
-  const data = img.data;
+/** Smooth droplet map: horizontal red ramp × vertical blue ramp
+ *  (difference-blended) with a blurred neutral core — the capsule
+ *  becomes a lens whose refraction hugs the curved rim. */
+function buildGlassMap(w: number, h: number): string {
+  const edge = Math.min(w, h) * 0.07;
   const r = h / 2;
-  const edge = Math.min(LENS_EDGE, r - 2);
-  for (let y = 0; y < h; y++) {
-    for (let x = 0; x < w; x++) {
-      // Capsule SDF — distance to the pill's centreline segment minus radius
-      const cx = Math.min(Math.max(x, r), w - r);
-      const dx = x - cx;
-      const dy = y - r;
-      const len = Math.hypot(dx, dy);
-      const dist = len - r; // < 0 inside the pill
-      let ox = 0;
-      let oy = 0;
-      if (dist > -edge && dist <= 0 && len > 0.001) {
-        const t = 1 + dist / edge; // 0 at band start → 1 at the rim
-        const fall = Math.pow(t, 1.7); // sharpest bend right at the edge
-        ox = (dx / len) * fall;
-        oy = (dy / len) * fall;
-      }
-      const i = (y * w + x) * 4;
-      data[i] = 128 + ox * 127;
-      data[i + 1] = 128 + oy * 127;
-      data[i + 2] = 128;
-      data[i + 3] = 255;
-    }
-  }
-  ctx.putImageData(img, 0, 0);
-  return canvas.toDataURL();
+  const svg = `<svg viewBox="0 0 ${w} ${h}" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="gx" x1="100%" y1="0%" x2="0%" y2="0%"><stop offset="0%" stop-color="#0000"/><stop offset="100%" stop-color="red"/></linearGradient><linearGradient id="gy" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#0000"/><stop offset="100%" stop-color="blue"/></linearGradient></defs><rect width="${w}" height="${h}" fill="black"/><rect width="${w}" height="${h}" rx="${r}" fill="url(#gx)"/><rect width="${w}" height="${h}" rx="${r}" fill="url(#gy)" style="mix-blend-mode:difference"/><rect x="${edge}" y="${edge}" width="${w - edge * 2}" height="${h - edge * 2}" rx="${r}" fill="hsl(0 0% 50% / 0.93)" style="filter:blur(5px)"/></svg>`;
+  return `data:image/svg+xml,${encodeURIComponent(svg)}`;
 }
 
 type LiquidRefs = {
@@ -106,7 +77,7 @@ function useNavScrollState({ sheenRef, navRef, dispRefs }: LiquidRefs) {
     let accDown = 0;
     let accUp = 0;
     let vel = 0; // smoothed scroll velocity, px/frame
-    let lastDisp = LENS_SCALE;
+    let lastBoost = 0;
     let raf = 0;
     let idle: ReturnType<typeof setTimeout> | undefined;
 
@@ -191,12 +162,12 @@ function useNavScrollState({ sheenRef, navRef, dispRefs }: LiquidRefs) {
               ? `scaleX(${(1 - squash * 0.35).toFixed(4)}) scaleY(${(1 + squash).toFixed(4)})`
               : '';
         }
-        const disp = LENS_SCALE + Math.min(speed * 0.75, LENS_MAX_BOOST);
+        const boost = Math.min(speed * 0.75, LIQUID_MAX_BOOST);
         // Skip sub-pixel churn, but always land the final rest value
-        if (Math.abs(disp - lastDisp) > 0.75 || (settling && lastDisp !== LENS_SCALE)) {
-          lastDisp = settling ? LENS_SCALE : disp;
+        if (Math.abs(boost - lastBoost) > 0.75 || (settling && lastBoost !== 0)) {
+          lastBoost = settling ? 0 : boost;
           dispRefs.current?.forEach((el, i) => {
-            el?.setAttribute('scale', (lastDisp * LENS_RGB[i]).toFixed(1));
+            el?.setAttribute('scale', (LIQUID_SCALE - lastBoost + LIQUID_OFFSETS[i]).toFixed(1));
           });
         }
         // Keep the frame chain alive until the liquid comes to rest
@@ -292,9 +263,9 @@ export default function Navbar() {
   const tone: Tone = open ? 'dark' : backdrop;
   const dark = tone === 'dark';
 
-  // Bake the lens displacement map to the pill's exact geometry; rebuild
-  // (debounced) when the capsule resizes. Chromium-only — url() backdrop
-  // filters silently fail elsewhere, so other engines keep the frost.
+  // Bake the droplet map to the pill's exact geometry; rebuild (debounced)
+  // when the capsule resizes. Chromium-only — url() backdrop filters
+  // silently fail elsewhere, so other engines keep the frost.
   useEffect(() => {
     const nav = navRef.current;
     const filter = filterRef.current;
@@ -308,15 +279,13 @@ export default function Navbar() {
       const w = Math.round(nav.offsetWidth);
       const h = Math.round(nav.offsetHeight);
       if (!w || !h) return;
-      const href = buildLensMap(w, h);
-      if (!href) return;
       filter.setAttribute('x', '0');
       filter.setAttribute('y', '0');
       filter.setAttribute('width', String(w));
       filter.setAttribute('height', String(h));
       feImage.setAttribute('width', String(w));
       feImage.setAttribute('height', String(h));
-      feImage.setAttribute('href', href);
+      feImage.setAttribute('href', buildGlassMap(w, h));
       setLens(true);
     };
 
@@ -396,14 +365,15 @@ export default function Navbar() {
             data-tone={tone}
             data-condensed={condensed && !open ? 'true' : 'false'}
             aria-label="Primary"
-            className={`nav-pill pointer-events-auto h-[52px] sm:h-[56px] ${lens ? 'nav-lens' : ''}`}
+            className={`nav-pill pointer-events-auto h-[50px] sm:h-[54px] lg:mx-auto lg:w-fit ${lens ? 'nav-lens' : ''}`}
           >
-            {/* Refraction filter — displacement map baked to pill geometry.
-                R/G/B refract at slightly different strengths (chromatic
-                aberration), then screen-blend back into full colour. */}
+            {/* The droplet — a smooth gradient map turns the capsule into a
+                lens: hard clean refraction at the curved rim, calm centre;
+                R/G/B refract at slightly different depths (chromatic split),
+                then screen-blend back into full colour. */}
             <svg aria-hidden className="absolute h-0 w-0">
               <filter
-                id="nav-lens"
+                id="nav-liquid"
                 ref={filterRef}
                 filterUnits="userSpaceOnUse"
                 primitiveUnits="userSpaceOnUse"
@@ -418,7 +388,7 @@ export default function Navbar() {
                       }}
                       in="SourceGraphic"
                       in2="map"
-                      scale={LENS_SCALE * LENS_RGB[i]}
+                      scale={LIQUID_SCALE + LIQUID_OFFSETS[i]}
                       xChannelSelector="R"
                       yChannelSelector="G"
                       result={`d-${ch}`}
@@ -454,7 +424,7 @@ export default function Navbar() {
               <span ref={glowRef} className="nav-glow-dot" />
             </span>
 
-            <div className="relative flex h-full items-center justify-between pl-2 pr-2 sm:pl-2.5 sm:pr-2.5">
+            <div className="relative flex h-full items-center justify-between gap-4 pl-2 pr-2 sm:pl-2.5 sm:pr-2.5 lg:gap-12">
               {/* Logo — ivory chip over dark glass, bare mark on ivory frost */}
               <a href="#top" className="flex items-center" aria-label="Susee Homes — home">
                 <span
@@ -481,8 +451,8 @@ export default function Navbar() {
                     href={`#${item.anchor}`}
                     className={`group relative text-[0.86rem] font-medium tracking-wide transition-colors duration-300 ${
                       dark
-                        ? 'text-ivory-50/90 hover:text-ivory-50'
-                        : 'text-text-strong/75 hover:text-fern-700'
+                        ? 'text-ivory-50 hover:text-white'
+                        : 'text-text-strong/90 hover:text-fern-700'
                     }`}
                   >
                     {t(item.key)}
@@ -503,8 +473,8 @@ export default function Navbar() {
                   locale={otherLocale}
                   className={`rounded-full border px-3.5 py-[0.4rem] text-[0.78rem] font-semibold transition-colors duration-300 ${
                     dark
-                      ? 'border-ivory-50/30 text-ivory-50/90 hover:border-ivory-50/70 hover:bg-ivory-50/10'
-                      : 'border-fern-600/25 text-fern-700 hover:border-fern-600 hover:bg-fern-600 hover:text-white'
+                      ? 'border-ivory-50/45 text-ivory-50 hover:border-ivory-50/80 hover:bg-ivory-50/10'
+                      : 'border-fern-600/40 text-fern-700 hover:border-fern-600 hover:bg-fern-600 hover:text-white'
                   }`}
                   aria-label={otherLocale === 'ta' ? 'தமிழில் காண்க' : 'View in English'}
                 >

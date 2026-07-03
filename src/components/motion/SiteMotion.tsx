@@ -30,6 +30,7 @@ export default function SiteMotion() {
     // ── Lenis ────────────────────────────────────────────────
     let lenis: Lenis | undefined;
     let tickerCb: ((time: number) => void) | undefined;
+    let scrollIdle: ReturnType<typeof setTimeout> | undefined;
     if (!reduced) {
       lenis = new Lenis({
         autoRaf: false,
@@ -37,7 +38,18 @@ export default function SiteMotion() {
         wheelMultiplier: 1,
       });
       window.__lenis = lenis;
-      lenis.on('scroll', ScrollTrigger.update);
+      // Flag active scroll so paint-only idle animations (the film grain
+      // drift) can pause while the page moves — imperceptible in motion,
+      // but it keeps their re-raster hitches off scroll frames. The class
+      // mutates only on the first scroll and ~160ms after motion settles.
+      const root = document.documentElement;
+      const onLenisScroll = () => {
+        ScrollTrigger.update();
+        root.classList.add('is-scrolling');
+        clearTimeout(scrollIdle);
+        scrollIdle = setTimeout(() => root.classList.remove('is-scrolling'), 160);
+      };
+      lenis.on('scroll', onLenisScroll);
       tickerCb = (time: number) => lenis!.raf(time * 1000);
       gsap.ticker.add(tickerCb);
       gsap.ticker.lagSmoothing(0);
@@ -129,6 +141,8 @@ export default function SiteMotion() {
       ctx.revert();
       if (tickerCb) gsap.ticker.remove(tickerCb);
       gsap.ticker.lagSmoothing(500, 33); // restore GSAP default
+      clearTimeout(scrollIdle);
+      document.documentElement.classList.remove('is-scrolling');
       lenis?.destroy();
       window.__lenis = undefined;
     };

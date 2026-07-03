@@ -21,10 +21,22 @@
     "tagline": "Built on trust. Designed for life.",
     "scroll": "Scroll",
     "chapters": [
-      { "index": "01", "label": "The Land" },
-      { "index": "02", "label": "The Layout" },
-      { "index": "03", "label": "The Build" },
-      { "index": "04", "label": "The Arrival" }
+      {
+        "index": "01",
+        "label": "The Land"
+      },
+      {
+        "index": "02",
+        "label": "The Layout"
+      },
+      {
+        "index": "03",
+        "label": "The Build"
+      },
+      {
+        "index": "04",
+        "label": "The Arrival"
+      }
     ],
     "stages": [
       {
@@ -64,10 +76,26 @@
   "stats": {
     "eyebrow": "The Numbers",
     "items": [
-      { "num": "6.72", "suffix": "", "label": "Acres of Premium Land" },
-      { "num": "181", "suffix": "+", "label": "Individual Plots" },
-      { "num": "40", "suffix": "%", "label": "Percent Open Space" },
-      { "num": "2016", "suffix": "", "label": "Established" }
+      {
+        "num": "6.72",
+        "suffix": "",
+        "label": "Acres of Premium Land"
+      },
+      {
+        "num": "181",
+        "suffix": "+",
+        "label": "Individual Plots"
+      },
+      {
+        "num": "40",
+        "suffix": "%",
+        "label": "Percent Open Space"
+      },
+      {
+        "num": "2016",
+        "suffix": "",
+        "label": "Established"
+      }
     ]
   },
   "pillars": {
@@ -78,12 +106,22 @@
       {
         "title": "Plotted Developments",
         "body": "DTCP-approved and RERA-certified layouts with clear documentation, full infrastructure — roads, drainage, electricity — and transparent pricing. Buy your land with complete legal confidence.",
-        "points": ["DTCP & RERA Certified", "Clear title documentation", "Full infrastructure ready", "Transparent pricing"]
+        "points": [
+          "DTCP & RERA Certified",
+          "Clear title documentation",
+          "Full infrastructure ready",
+          "Transparent pricing"
+        ]
       },
       {
         "title": "Custom Home Construction",
         "body": "Our in-house construction team designs and builds your home on your plot, end-to-end. From architectural concept to handover, every detail is handled by a single trusted partner.",
-        "points": ["Architectural design included", "Premium materials", "Milestone-based payments", "Dedicated project manager"]
+        "points": [
+          "Architectural design included",
+          "Premium materials",
+          "Milestone-based payments",
+          "Dedicated project manager"
+        ]
       }
     ]
   },
@@ -91,23 +129,57 @@
     "eyebrow": "How It Works",
     "heading": "Four steps to\nyour new home.",
     "steps": [
-      { "n": "01", "title": "Choose Your Plot", "body": "Browse available plots with clear pricing, documentation, and site visit appointments." },
-      { "n": "02", "title": "Design Your Home", "body": "Work with our architects to design a home that fits your lifestyle and plot dimensions." },
-      { "n": "03", "title": "We Build It", "body": "Our construction team handles everything — materials, labour, timelines, and quality checks." },
-      { "n": "04", "title": "Move In", "body": "Receive your keys. We hand over a fully finished home with all utilities connected." }
+      {
+        "n": "01",
+        "title": "Choose Your Plot",
+        "body": "Browse available plots with clear pricing, documentation, and site visit appointments."
+      },
+      {
+        "n": "02",
+        "title": "Design Your Home",
+        "body": "Work with our architects to design a home that fits your lifestyle and plot dimensions."
+      },
+      {
+        "n": "03",
+        "title": "We Build It",
+        "body": "Our construction team handles everything — materials, labour, timelines, and quality checks."
+      },
+      {
+        "n": "04",
+        "title": "Move In",
+        "body": "Receive your keys. We hand over a fully finished home with all utilities connected."
+      }
     ]
   },
   "alight": {
     "eyebrow": "Flagship Project",
     "heading": "Project ALIGHT\nPoonamallee, Chennai",
-    "tags": ["DTCP Approved", "RERA Certified", "Poonamallee, Chennai", "6.72 Acres", "181 Plots"],
+    "tags": [
+      "DTCP Approved",
+      "RERA Certified",
+      "Poonamallee, Chennai",
+      "6.72 Acres",
+      "181 Plots"
+    ],
     "body": "ALIGHT is a premium plotted development at the heart of Chennai's fastest-growing corridor. Located moments from Kuthambakkam, Nazarathpet Metro, and Poonamallee, it offers the ideal combination of connectivity, serenity, and strong investment potential.",
     "connectivityEyebrow": "Connectivity",
     "connectivity": [
-      { "time": "2 min", "place": "Kuthambakkam" },
-      { "time": "8 min", "place": "Nazarathpet Metro Station" },
-      { "time": "10 min", "place": "Poonamallee Town Centre" },
-      { "time": "25 min", "place": "Chennai Central" }
+      {
+        "time": "2 min",
+        "place": "Kuthambakkam"
+      },
+      {
+        "time": "8 min",
+        "place": "Nazarathpet Metro Station"
+      },
+      {
+        "time": "10 min",
+        "place": "Poonamallee Town Centre"
+      },
+      {
+        "time": "25 min",
+        "place": "Chennai Central"
+      }
     ],
     "amenitiesEyebrow": "Amenities",
     "amenities": [
@@ -123,9 +195,18 @@
       "Vastu-compliant plots"
     ],
     "figures": [
-      { "num": "627–2,259", "label": "sq ft plot sizes available" },
-      { "num": "181", "label": "total registered plots" },
-      { "num": "6.72", "label": "acres total project area" }
+      {
+        "num": "627–2,259",
+        "label": "sq ft plot sizes available"
+      },
+      {
+        "num": "181",
+        "label": "total registered plots"
+      },
+      {
+        "num": "6.72",
+        "label": "acres total project area"
+      }
     ],
     "masterplanLabel": "Masterplan — Survey View",
     "cta": "Book a Site Visit"
@@ -158,11 +239,28 @@
   "upcoming": {
     "eyebrow": "Upcoming Projects",
     "heading": "More landmark\ndevelopments coming.",
+    "intro": "Three new landmark developments are entering the Susee pipeline across Chennai's growth corridor — each held to the same standard of clear title, full infrastructure and transparent pricing.",
+    "hint": "Tap a plate to open the record",
     "comingSoon": "Coming Soon",
     "cards": [
-      { "name": "Project SOLEIL", "loc": "Oragadam, Chennai", "area": "~10 Acres", "status": "Pre-launch" },
-      { "name": "Project VERDANT", "loc": "Tambaram, Chennai", "area": "~8 Acres", "status": "Upcoming 2025" },
-      { "name": "Project CREST", "loc": "Sriperumbudur, Chennai", "area": "~12 Acres", "status": "Upcoming 2025" }
+      {
+        "name": "Project SOLEIL",
+        "loc": "Oragadam, Chennai",
+        "area": "~10 Acres",
+        "status": "Pre-launch"
+      },
+      {
+        "name": "Project VERDANT",
+        "loc": "Tambaram, Chennai",
+        "area": "~8 Acres",
+        "status": "Upcoming 2025"
+      },
+      {
+        "name": "Project CREST",
+        "loc": "Sriperumbudur, Chennai",
+        "area": "~12 Acres",
+        "status": "Upcoming 2025"
+      }
     ]
   },
   "founder": {
@@ -181,10 +279,26 @@
     "bio2": "Project ALIGHT is the most carefully planned work of my career — a 6.72-acre master community where every detail, from the road widths to the open-space ratio, was decided with one question in mind: would I want my own family to live here?",
     "journeyEyebrow": "Our Journey",
     "milestones": [
-      { "year": "2004", "label": "Founded Susee Homes", "sub": "Started with a single plot layout in Koyambedu" },
-      { "year": "2010", "label": "100 families housed", "sub": "Expanded to North Chennai and Poonamallee belt" },
-      { "year": "2017", "label": "Construction arm launched", "sub": "End-to-end home building added to the portfolio" },
-      { "year": "2024", "label": "Project ALIGHT", "sub": "6.72-acre master-planned community in Poonamallee" }
+      {
+        "year": "2004",
+        "label": "Founded Susee Homes",
+        "sub": "Started with a single plot layout in Koyambedu"
+      },
+      {
+        "year": "2010",
+        "label": "100 families housed",
+        "sub": "Expanded to North Chennai and Poonamallee belt"
+      },
+      {
+        "year": "2017",
+        "label": "Construction arm launched",
+        "sub": "End-to-end home building added to the portfolio"
+      },
+      {
+        "year": "2024",
+        "label": "Project ALIGHT",
+        "sub": "6.72-acre master-planned community in Poonamallee"
+      }
     ]
   },
   "testimonials": {

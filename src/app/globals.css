@@ -19,9 +19,9 @@
   --color-mint-400: #74d4a0;
   --color-mint-100: #d8f3dc;
 
-  /* Limestone (light canvas) */
-  --color-ivory-50: #f7f4ec;
-  --color-ivory-100: #f1ecdf;
+  /* Limestone (light canvas) — warm cream, not white */
+  --color-ivory-50: #f4eeda;
+  --color-ivory-100: #eee7d2;
   --color-ivory-200: #e5deca;
   --color-ivory-300: #d6cdb2;
 
@@ -62,8 +62,8 @@
 }
 
 [lang='ta'] {
-  --display: var(--font-anek-tamil), var(--font-fraunces), serif;
-  --body: var(--font-anek-tamil), var(--font-archivo), sans-serif;
+  --display: var(--font-noto-tamil), var(--font-fraunces), serif;
+  --body: var(--font-noto-tamil), var(--font-archivo), sans-serif;
 }
 
 /* ─── Base ─────────────────────────────────────────────────── */
@@ -101,6 +101,12 @@ html.js [data-lines] .line-inner {
 }
 html.js [data-hero-fade] {
   opacity: 0;
+}
+
+/* Repeat visit this session (or reduced motion) — decided synchronously
+   before first paint, so the curtain is never even flashed. */
+html.intro-skip .preloader-root {
+  display: none;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -306,6 +312,43 @@ html.js [data-hero-fade] {
   mask-image: none;
 }
 
+/* ─── Scroll-reel testimonials — char rise / block exit ───────── */
+
+@keyframes scroll-reel-char-rise {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes scroll-reel-block-exit {
+  from {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(-12px);
+  }
+}
+
+.scroll-reel-char {
+  display: inline-block;
+  opacity: 0;
+  transform: translateY(0.55em);
+  animation: scroll-reel-char-rise 0.45s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+.scroll-reel-exit {
+  animation: scroll-reel-block-exit 0.24s ease forwards;
+}
+/* kill in-flight char rises while the block exits */
+.scroll-reel-exit .scroll-reel-char {
+  animation: none;
+  opacity: 1;
+  transform: none;
+}
+
 /* ─── S.03 — the deed stack ────────────────────────────────────
    Four survey sheets, one per step. Each card pins beneath the nav
    and the next numbered sheet slides up over it; covered sheets
@@ -394,6 +437,15 @@ html.js [data-hero-fade] {
   opacity: 0.05;
   mix-blend-mode: overlay;
   animation: grain-shift 9s steps(6) infinite;
+}
+
+/* Perf: the 6-step / 9s grain drift is imperceptible while the page is
+   moving, yet each step re-rasterizes the oversized mix-blend layer and
+   those hitches land on scroll frames. Pause the drift during active
+   scroll (SiteMotion toggles html.is-scrolling on Lenis scroll, clearing
+   it ~160ms after motion settles); idle grain animates exactly as before. */
+html.is-scrolling .grain::after {
+  animation-play-state: paused;
 }
 
 @keyframes grain-shift {
@@ -547,6 +599,57 @@ html.js [data-hero-fade] {
   mask-image: linear-gradient(to right, transparent, black 8%, black 92%, transparent);
 }
 
+/* ─── Meteors ──────────────────────────────────────────────── */
+/* Drafting-pen shooting stars for the ivory Plotted Developments
+   card — fern head, tail fading through low-alpha brass. Quiet by
+   design: peak opacity 0.75, hairline tail. */
+
+@keyframes meteor {
+  0% {
+    transform: rotate(215deg) translateX(0);
+    opacity: 0;
+  }
+  8% {
+    opacity: 0.75;
+  }
+  62% {
+    opacity: 0.75;
+  }
+  100% {
+    transform: rotate(215deg) translateX(-640px);
+    opacity: 0;
+  }
+}
+.meteor {
+  position: absolute;
+  height: 2px;
+  width: 2px;
+  border-radius: 9999px;
+  background: var(--color-fern-600);
+  box-shadow: 0 0 0 3px rgba(45, 106, 79, 0.15);
+  transform: rotate(215deg);
+  opacity: 0; /* keyframes fade it in; stays invisible under reduced motion */
+}
+.meteor::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 60px;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    var(--color-fern-600),
+    rgba(181, 131, 10, 0.35) 45%,
+    transparent
+  );
+}
+@media (prefers-reduced-motion: no-preference) {
+  .animate-meteor {
+    animation: meteor 5s linear infinite;
+  }
+}
+
 /* ─── Hero helpers ─────────────────────────────────────────── */
 
 @keyframes nudge-fade {
@@ -652,4 +755,203 @@ html.js [data-hero-fade] {
     font-size: 0.62rem;
     letter-spacing: 0.16em;
   }
+}
+
+/* ─── Footer monogram ────────────────────────────────────────
+   A hairline-outline wordmark that fills with the site's brass →
+   mint → fern sweep on hover. Two identical copies are stacked —
+   an outline layer and a gradient-clip fill layer — crossfading
+   on opacity, so nothing has to interpolate a live gradient. */
+
+.footer-mark-outline {
+  color: transparent;
+  -webkit-text-stroke: 1.15px rgba(247, 244, 236, 0.4);
+  transition: -webkit-text-stroke-color 0.6s var(--ease-soft);
+}
+.footer-mark:hover .footer-mark-outline,
+.footer-mark:active .footer-mark-outline {
+  -webkit-text-stroke-color: rgba(247, 244, 236, 0.08);
+}
+
+.footer-mark-fill {
+  background: linear-gradient(
+    100deg,
+    var(--color-brass-200) 0%,
+    var(--color-brass-300) 30%,
+    var(--color-mint-400) 66%,
+    var(--color-fern-600) 100%
+  );
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* ─── CardSwap — the upcoming-projects stack ─────────────────
+   A 3D deck of survey plates that deals itself, and expands a
+   clicked plate into a full record with a MacBook-style ghost
+   morph (FLIP from the card's exact position). */
+
+.card-swap-container {
+  position: absolute;
+  bottom: 50%;
+  right: 50%;
+  transform: translate(50%, 50%);
+  transform-origin: center center;
+  perspective: 1100px;
+  overflow: visible;
+}
+@media (min-width: 1024px) {
+  .card-swap-container {
+    bottom: 0;
+    right: 0;
+    transform: translate(6%, 12%);
+    transform-origin: bottom right;
+  }
+}
+.swap-card {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  border-radius: 14px;
+  transform-style: preserve-3d;
+  will-change: transform;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  cursor: pointer;
+}
+@media (max-width: 1023px) {
+  .card-swap-container {
+    transform: translate(50%, 50%) scale(0.82);
+  }
+}
+@media (max-width: 520px) {
+  .card-swap-container {
+    transform: translate(50%, 50%) scale(0.62);
+  }
+}
+
+/* Ghost-expand overlay */
+.ghost-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 120;
+  background: rgba(10, 16, 13, 0.5);
+  -webkit-backdrop-filter: blur(10px) saturate(1.1);
+  backdrop-filter: blur(10px) saturate(1.1);
+  opacity: 0;
+  will-change: opacity;
+}
+.ghost-panel {
+  position: fixed;
+  z-index: 121;
+  will-change: transform;
+  transform-origin: top left;
+}
+
+/* ─── Preloader — the grand opening ──────────────────────────
+   A cinematic ink stage: a breathing survey grid and dual glow,
+   a monochrome brand lockup that catches a gold sheen, the name
+   rising line-by-line behind masks, and a surveyor's baseline +
+   counter — then the whole plate wipes up to unveil the film.
+   Everything animates transform/opacity/clip-path only. */
+
+.preloader-root {
+  background:
+    radial-gradient(130% 90% at 50% 30%, #12211a 0%, #0a100d 62%, #070b09 100%);
+}
+
+/* Breathing survey grid, masked to fade toward the edges */
+.pl-grid {
+  position: absolute;
+  inset: -12%;
+  background-image:
+    linear-gradient(rgba(116, 212, 160, 0.06) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(116, 212, 160, 0.06) 1px, transparent 1px);
+  background-size: 48px 48px;
+  -webkit-mask-image: radial-gradient(120% 95% at 50% 44%, #000 26%, transparent 76%);
+  mask-image: radial-gradient(120% 95% at 50% 44%, #000 26%, transparent 76%);
+  will-change: transform, opacity;
+}
+
+/* Dual glow — fern horizon + a warm brass core, slowly breathing */
+.pl-glow {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(58% 52% at 50% 40%, rgba(45, 106, 79, 0.4), transparent 70%),
+    radial-gradient(42% 40% at 50% 62%, rgba(181, 131, 10, 0.16), transparent 74%);
+  animation: pl-breathe 4.5s ease-in-out infinite;
+  will-change: transform, opacity;
+}
+@keyframes pl-breathe {
+  0%, 100% { opacity: 0.82; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.05); }
+}
+
+/* Gold sheen that sweeps across the brand lockup once */
+.pl-sheen {
+  position: absolute;
+  inset: -40% -60%;
+  background: linear-gradient(
+    105deg,
+    transparent 38%,
+    rgba(255, 255, 255, 0.55) 48%,
+    rgba(236, 211, 156, 0.75) 52%,
+    transparent 64%
+  );
+  mix-blend-mode: screen;
+  pointer-events: none;
+  will-change: transform;
+}
+
+/* Name mask — each word rises from behind its own clip */
+.pl-word {
+  display: block;
+  overflow: hidden;
+  padding-bottom: 0.1em;
+  margin-bottom: -0.1em;
+}
+.pl-word-inner {
+  display: block;
+  will-change: transform;
+}
+
+/* Surveyor's baseline under the name */
+.pl-rule {
+  transform-origin: center;
+  will-change: transform;
+}
+
+/* Corner survey ticks */
+.pl-tick {
+  will-change: transform, opacity;
+}
+
+/* Pre-animation state — the curtain is server-rendered so it can cover the
+   hero before hydration, but its content must start in each element's GSAP
+   "from" pose (hidden), not settled. Otherwise a refresh flashes a static,
+   fully-composed splash for a frame before the timeline takes over. GSAP
+   overrides these with inline styles the instant it runs. The `js` gate keeps
+   the curtain fully visible if scripts never load. */
+html.js .pl-grid {
+  opacity: 0;
+}
+html.js .pl-lockup {
+  opacity: 0;
+}
+html.js .pl-word-inner {
+  transform: translateY(120%);
+}
+html.js .pl-rule {
+  transform: scaleX(0);
+}
+html.js .pl-tagline {
+  opacity: 0;
+}
+html.js .pl-progress {
+  transform: scaleX(0);
+}
+html.js .pl-tick,
+html.js .pl-reg {
+  opacity: 0;
 }

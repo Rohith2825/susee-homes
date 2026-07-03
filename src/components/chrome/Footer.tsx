@@ -24,7 +24,7 @@ export default async function Footer() {
 
       <div className="container-x relative">
         {/* ── Top: brand + link columns ── */}
-        <div className="grid gap-14 py-[clamp(3.5rem,7vw,6rem)] md:grid-cols-[1.4fr_1fr_1fr]">
+        <div className="grid gap-10 py-[clamp(2.5rem,5vw,4rem)] md:grid-cols-[1.4fr_1fr_1fr]">
           <div>
             {/* One-colour ivory rendition of the mark — no white card on ink */}
             <Image
@@ -34,13 +34,13 @@ export default async function Footer() {
               height={38}
               className="h-[36px] w-auto opacity-90 brightness-0 invert"
             />
-            <p className="font-display-italic mt-6 text-[1.35rem] text-brass-200/95">{t('tagline')}</p>
-            <p className="mt-4 max-w-sm text-[0.9rem] leading-relaxed text-ivory-50/55">{t('blurb')}</p>
+            <p className="font-display-italic mt-5 text-[1.35rem] text-brass-200/95">{t('tagline')}</p>
+            <p className="mt-3 max-w-sm text-[0.9rem] leading-relaxed text-ivory-50/55">{t('blurb')}</p>
           </div>
 
           <nav aria-label={t('explore')}>
-            <p className="micro-label mb-6 text-brass-300/80">{t('explore')}</p>
-            <ul className="flex flex-col gap-3">
+            <p className="micro-label mb-5 text-brass-300/80">{t('explore')}</p>
+            <ul className="flex flex-col gap-2.5">
               {LINKS.map((l) => (
                 <li key={l.key}>
                   <a
@@ -59,8 +59,8 @@ export default async function Footer() {
           </nav>
 
           <div>
-            <p className="micro-label mb-6 text-brass-300/80">{t('reach')}</p>
-            <div className="flex flex-col gap-4 text-[0.92rem]">
+            <p className="micro-label mb-5 text-brass-300/80">{t('reach')}</p>
+            <div className="flex flex-col gap-3 text-[0.92rem]">
               <a
                 href={`tel:${SITE.phone}`}
                 className="inline-flex items-center gap-3 text-ivory-50/75 transition-colors hover:text-ivory-50"
@@ -83,24 +83,28 @@ export default async function Footer() {
           </div>
         </div>
 
-        {/* ── Survey strip ── */}
-        <div className="flex items-center justify-between gap-6 border-t border-ivory-50/10 py-5">
-          <span className="micro-label text-ivory-50/40">{t('coordinates')}</span>
-          {/* scale bar */}
-          <div className="hidden items-center gap-3 sm:flex" aria-hidden="true">
-            <svg width="120" height="8" viewBox="0 0 120 8" className="text-ivory-50/35">
-              <path d="M0 0v8M30 3v5M60 0v8M90 3v5M120 0v8" stroke="currentColor" strokeWidth="1" />
-              <path d="M0 7.5h120" stroke="currentColor" strokeWidth="1" />
-            </svg>
-            <span className="micro-label text-ivory-50/40">{t('scale')}</span>
-          </div>
-          <a
-            href="#top"
-            className="micro-label group inline-flex items-center gap-2 py-2.5 text-ivory-50/70 transition-colors hover:text-brass-200"
+        {/* ── Signature mark — the site's own display serif (not a generic
+             bold sans stencil), hairline outline that fills brass→mint→fern
+             on hover. Sized in container-query units so it always fits
+             container-x's own rendered width instead of guessing against
+             the viewport. ── */}
+        <div
+          aria-hidden="true"
+          className="border-t border-ivory-50/10 py-[clamp(1rem,3vw,2.25rem)] [container-type:inline-size]"
+        >
+          <div
+            className="footer-mark group relative select-none text-center leading-none"
+            style={{ fontFamily: 'var(--font-playfair), Georgia, serif', fontWeight: 600 }}
           >
-            {t('backToTop')}
-            <span className="inline-block transition-transform duration-300 group-hover:-translate-y-0.5">↑</span>
-          </a>
+            {/* leading-none + a hair of top padding so the tall caps' stroke is
+                never clipped; both layers share the exact box so they align */}
+            <span className="footer-mark-outline block whitespace-nowrap pt-[0.08em] text-[clamp(2.4rem,13.5cqw,9rem)] tracking-[-0.01em]">
+              Susee Homes
+            </span>
+            <span className="footer-mark-fill pointer-events-none absolute inset-0 block whitespace-nowrap pt-[0.08em] text-[clamp(2.4rem,13.5cqw,9rem)] tracking-[-0.01em] opacity-0 transition-opacity duration-700 ease-out group-hover:opacity-100 group-active:opacity-100">
+              Susee Homes
+            </span>
+          </div>
         </div>
 
         {/* ── Legal ── */}

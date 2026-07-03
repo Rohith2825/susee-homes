@@ -25,12 +25,15 @@ function buildPlots(): Plot[] {
   const plots: Plot[] = [];
   let id = 1;
 
+  // Every quadrant is inset from both the property line (boundary at
+  // x 16..384, y 18..282) and the road cross (centred at x 200 / y 150),
+  // so no plot ever crosses a road or the parcel edge.
   const quads: Array<{ x: number; y: number; w: number; h: number; cols: number; rows: number; skip?: number[] }> = [
-    { x: 22, y: 22, w: 168, h: 118, cols: 4, rows: 3 },
-    { x: 210, y: 22, w: 168, h: 118, cols: 4, rows: 3 },
-    { x: 22, y: 160, w: 168, h: 118, cols: 4, rows: 3 },
-    // south-east quadrant hosts the park — only a single row of plots
-    { x: 210, y: 160, w: 168, h: 118, cols: 4, rows: 3, skip: [4, 5, 6, 7, 8, 9, 10, 11] },
+    { x: 25, y: 27, w: 166, h: 112, cols: 4, rows: 3 }, // NW
+    { x: 209, y: 27, w: 166, h: 112, cols: 4, rows: 3 }, // NE
+    { x: 25, y: 161, w: 166, h: 112, cols: 4, rows: 3 }, // SW
+    // SE quadrant is the park; only a single plot column sits beside it
+    { x: 209, y: 161, w: 42, h: 112, cols: 1, rows: 3 },
   ];
 
   quads.forEach((q) => {
@@ -74,6 +77,14 @@ interface MasterplanProps {
 export default function Masterplan({ label }: MasterplanProps) {
   const rootRef = useRef<HTMLDivElement>(null);
   const [hover, setHover] = useState<{ plot: Plot; x: number; y: number } | null>(null);
+  // rAF-coalesced hover updates: native mousemove can fire well above 60Hz
+  // (high-poll-rate mice/trackpads), and each raw event previously
+  // re-rendered all ~40 plot rects + did a synchronous getBoundingClientRect
+  // read. Collapsing to at most one state update (and one rect read) per
+  // animation frame preserves the exact same visual result at the exact
+  // cadence the display can show anyway.
+  const pendingHoverRef = useRef<{ plot: Plot; clientX: number; clientY: number } | null>(null);
+  const hoverRafRef = useRef<number | null>(null);
 
   useEffect(() => {
     const root = rootRef.current;
@@ -116,10 +127,32 @@ export default function Masterplan({ label }: MasterplanProps) {
     return () => ctx.revert();
   }, []);
 
-  const onPlotMove = (plot: Plot) => (e: React.MouseEvent) => {
+  useEffect(() => {
+    return () => {
+      if (hoverRafRef.current != null) cancelAnimationFrame(hoverRafRef.current);
+    };
+  }, []);
+
+  const flushHover = () => {
+    hoverRafRef.current = null;
+    const pending = pendingHoverRef.current;
+    if (!pending) {
+      setHover(null);
+      return;
+    }
     const rect = rootRef.current?.getBoundingClientRect();
     if (!rect) return;
-    setHover({ plot, x: e.clientX - rect.left, y: e.clientY - rect.top });
+    setHover({ plot: pending.plot, x: pending.clientX - rect.left, y: pending.clientY - rect.top });
+  };
+
+  const scheduleHover = (next: { plot: Plot; clientX: number; clientY: number } | null) => {
+    pendingHoverRef.current = next;
+    if (hoverRafRef.current != null) return;
+    hoverRafRef.current = requestAnimationFrame(flushHover);
+  };
+
+  const onPlotMove = (plot: Plot) => (e: React.MouseEvent) => {
+    scheduleHover({ plot, clientX: e.clientX, clientY: e.clientY });
   };
 
   return (
@@ -141,19 +174,19 @@ export default function Masterplan({ label }: MasterplanProps) {
           </defs>
           <rect x="0" y="0" width="400" height="300" fill="url(#mp-grid)" />
 
-          {/* outer boundary */}
+          {/* outer boundary — clean rectangle with a chamfered SE corner */}
           <path
             className="mp-boundary"
-            d="M14 20 L386 14 L390 240 L330 292 L18 286 Z"
+            d="M16 18 L384 18 L384 232 L334 282 L16 282 Z"
             fill="none"
             stroke="rgba(236,211,156,0.8)"
             strokeWidth="1.2"
           />
 
-          {/* roads */}
-          <g stroke="rgba(247,244,236,0.28)" strokeWidth="7" strokeLinecap="square">
-            <line className="mp-road origin-center" x1="200" y1="18" x2="200" y2="284" />
-            <line className="mp-road origin-center" x1="18" y1="150" x2="386" y2="150" />
+          {/* roads — centred cross, held just inside the boundary */}
+          <g stroke="rgba(247,244,236,0.28)" strokeWidth="6.5" strokeLinecap="square">
+            <line className="mp-road origin-center" x1="200" y1="20" x2="200" y2="280" />
+            <line className="mp-road origin-center" x1="18" y1="150" x2="382" y2="150" />
           </g>
 
           {/* plots */}
@@ -172,7 +205,7 @@ export default function Masterplan({ label }: MasterplanProps) {
                   className="cursor-pointer transition-[fill] duration-300"
                   style={hover?.plot.id === p.id ? { fill: 'rgba(236,211,156,0.16)' } : undefined}
                   onMouseMove={onPlotMove(p)}
-                  onMouseLeave={() => setHover(null)}
+                  onMouseLeave={() => scheduleHover(null)}
                 />
                 {p.dot && !p.sold && (
                   <circle cx={p.x + p.w / 2} cy={p.y + p.h / 2} r="1.6" fill="#c96a4a" pointerEvents="none" />
@@ -181,28 +214,35 @@ export default function Masterplan({ label }: MasterplanProps) {
             ))}
           </g>
 
-          {/* park — the 40% open space */}
+          {/* park — the 40% open space, its SE corner following the parcel
+              chamfer so it stays inside the property line */}
           <g className="mp-extra">
-            <rect x="252" y="160" width="126" height="118" rx="2" fill="rgba(116,212,160,0.09)" stroke="rgba(116,212,160,0.45)" strokeWidth="0.7" strokeDasharray="3 3" />
-            <circle cx="315" cy="219" r="24" fill="none" stroke="rgba(116,212,160,0.35)" strokeWidth="0.6" />
-            <circle cx="315" cy="219" r="14" fill="none" stroke="rgba(116,212,160,0.28)" strokeWidth="0.6" strokeDasharray="2 3" />
-            <text x="315" y="256" textAnchor="middle" fontSize="7" fill="rgba(247,244,236,0.6)" fontFamily="var(--mono)" letterSpacing="1.5">
+            <path
+              d="M258 161 L375 161 L375 224 L326 273 L258 273 Z"
+              fill="rgba(116,212,160,0.09)"
+              stroke="rgba(116,212,160,0.45)"
+              strokeWidth="0.7"
+              strokeDasharray="3 3"
+            />
+            <circle cx="316" cy="208" r="22" fill="none" stroke="rgba(116,212,160,0.35)" strokeWidth="0.6" />
+            <circle cx="316" cy="208" r="13" fill="none" stroke="rgba(116,212,160,0.28)" strokeWidth="0.6" strokeDasharray="2 3" />
+            <text x="304" y="252" textAnchor="middle" fontSize="7" fill="rgba(247,244,236,0.6)" fontFamily="var(--mono)" letterSpacing="1.5">
               PARK · 40%
             </text>
           </g>
 
-          {/* road labels */}
-          <g className="mp-extra" fontFamily="var(--mono)" fontSize="6.4" fill="rgba(247,244,236,0.5)" letterSpacing="1.2">
-            <text x="196" y="90" transform="rotate(-90 196 90)" textAnchor="middle" dominantBaseline="text-after-edge">
+          {/* road labels — centred over each road */}
+          <g className="mp-extra" fontFamily="var(--mono)" fontSize="6" fill="rgba(247,244,236,0.5)" letterSpacing="1.2">
+            <text x="200" y="86" transform="rotate(-90 200 86)" textAnchor="middle" dominantBaseline="central">
               30 FT ROAD
             </text>
-            <text x="100" y="147" textAnchor="middle">40 FT ROAD</text>
+            <text x="102" y="147" textAnchor="middle" dominantBaseline="central">40 FT ROAD</text>
           </g>
 
-          {/* entry gate mark */}
+          {/* entry gate mark — on the straight bottom edge, on the road axis */}
           <g className="mp-extra">
-            <path d="M192 286 h16" stroke="rgba(236,211,156,0.9)" strokeWidth="2.4" />
-            <text x="200" y="298" textAnchor="middle" fontSize="6.4" fill="rgba(236,211,156,0.75)" fontFamily="var(--mono)" letterSpacing="1.2">
+            <path d="M192 282 h16" stroke="rgba(236,211,156,0.9)" strokeWidth="2.4" />
+            <text x="200" y="294" textAnchor="middle" fontSize="6.4" fill="rgba(236,211,156,0.75)" fontFamily="var(--mono)" letterSpacing="1.2">
               ENTRY
             </text>
           </g>

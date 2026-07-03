@@ -39,22 +39,48 @@
   height: 44px;
 }
 
-/* True lensing (Chromium only — the .nav-lens class is applied by JS after
-   the displacement map is baked; url() backdrop filters don't render in
-   Safari/Firefox, which keep the frost above). The centre goes nearly
-   optically clear, so the tint layers thin out with it. */
-.nav-pill.nav-lens {
-  backdrop-filter: url(#nav-lens) blur(3px) saturate(1.75) brightness(1.04);
+/* Guaranteed legibility over bright footage — ink halo behind light type */
+.nav-pill[data-tone='dark'] a,
+.nav-pill[data-tone='dark'] .micro-label {
+  text-shadow:
+    0 1px 10px rgba(10, 16, 13, 0.5),
+    0 0 2px rgba(10, 16, 13, 0.35);
 }
+
+/* iOS 26 liquid glass (Chromium only — url() backdrop filters don't render
+   in Safari/Firefox, which keep the frost above). Smooth droplet refraction
+   at the rim + an iOS-grade frost that melts hard boundaries into clean
+   light before they refract. */
+.nav-pill.nav-lens {
+  backdrop-filter: url(#nav-liquid) blur(14px) saturate(1.8) brightness(1.02);
+}
+/* Blown-glass shading — strong top gloss, clear middle, a soft floor
+   reflection, so the capsule reads as a curved liquid body. Over
+   low-detail dark sections the SVG displacement has nothing to refract
+   (you can't bend light around content that isn't there), so this
+   gradient carries the glass read on its own — kept punchier than the
+   light tint for that reason, not just for symmetry with it. */
 .nav-lens .nav-glass-dark {
   background:
-    linear-gradient(to bottom, rgba(255, 255, 255, 0.09), rgba(255, 255, 255, 0.02) 52%),
-    rgba(10, 16, 13, 0.3);
+    linear-gradient(
+      to bottom,
+      rgba(255, 255, 255, 0.24),
+      rgba(255, 255, 255, 0.045) 42%,
+      rgba(255, 255, 255, 0.02) 70%,
+      rgba(217, 188, 122, 0.1)
+    ),
+    rgba(10, 16, 13, 0.4);
 }
 .nav-lens .nav-glass-light {
   background:
-    linear-gradient(to bottom, rgba(255, 255, 255, 0.42), rgba(255, 255, 255, 0.08) 58%),
-    rgba(247, 244, 236, 0.38);
+    linear-gradient(
+      to bottom,
+      rgba(255, 255, 255, 0.55),
+      rgba(255, 255, 255, 0.08) 48%,
+      rgba(255, 255, 255, 0.03) 72%,
+      rgba(255, 255, 255, 0.28)
+    ),
+    rgba(247, 244, 236, 0.34);
 }
 
 /* Scroll-reactive specular streak — position is written straight to the DOM

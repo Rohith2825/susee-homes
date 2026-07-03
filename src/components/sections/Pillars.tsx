@@ -3,6 +3,7 @@ import Eyebrow from '@/components/ui/Eyebrow';
 import SplitLines from '@/components/motion/SplitLines';
 import TiltCard from '@/components/motion/TiltCard';
 import { PixelCanvas } from '@/components/ui/pixel-canvas';
+import { Meteors } from '@/components/ui/meteors';
 import { PlotIcon, HomeIcon } from '@/components/ui/icons';
 
 interface PillarCard {
@@ -45,6 +46,17 @@ export default async function Pillars() {
                 }`}
               >
                 {!dark && <span className="tick-b" aria-hidden="true" />}
+                {/* Meteor field — fine fern/brass streaks drifting across the
+                    paper, clipped here (the card itself must stay overflow-
+                    visible for the preserve-3d tilt) */}
+                {!dark && (
+                  <div
+                    className="pointer-events-none absolute inset-0 overflow-hidden rounded-[inherit]"
+                    aria-hidden="true"
+                  >
+                    <Meteors number={14} />
+                  </div>
+                )}
                 {/* Gold twinkle field — pixels glow in and out at random
                     places while hovered, never the full carpet */}
                 {dark && (

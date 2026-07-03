@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 
 /**
  * Background Boxes (Aceternity) — the skewed isometric tile plane where
@@ -26,8 +26,34 @@ const COLORS = [
 const ROWS = 72;
 const COLS = 66;
 
+// Inserting all ROWS*COLS (~4,752) cells in one synchronous commit is a
+// ~150-300ms main-thread stall (measured) the instant this mounts — and it
+// mounts on an IntersectionObserver trigger, i.e. while the user may still
+// be actively scrolling. Build the columns incrementally across a handful
+// of animation frames instead: same final DOM/visual grid, just never more
+// than one small slice of it inserted in a single frame. The whole build
+// finishes in ~10 frames (well under 200ms), which — given the section
+// isn't mounted until it's already ~400px from view — is done long before
+// a normal scroll gesture brings it on screen.
+const COLUMNS_PER_FRAME = 6;
+
 export const BoxesCore = ({ className = '' }: { className?: string }) => {
   const planeRef = useRef<HTMLDivElement>(null);
+  const [visibleColumns, setVisibleColumns] = useState(0);
+
+  useEffect(() => {
+    let raf = 0;
+    let built = 0;
+    const grow = () => {
+      built = Math.min(ROWS, built + COLUMNS_PER_FRAME);
+      setVisibleColumns(built);
+      if (built < ROWS) {
+        raf = requestAnimationFrame(grow);
+      }
+    };
+    raf = requestAnimationFrame(grow);
+    return () => cancelAnimationFrame(raf);
+  }, []);
 
   const onPointerOver = (e: React.PointerEvent) => {
     const cell = (e.target as HTMLElement).closest<HTMLElement>('[data-cell]');
@@ -60,7 +86,7 @@ export const BoxesCore = ({ className = '' }: { className?: string }) => {
       className={`absolute left-1/2 top-1/2 z-0 flex ${className}`}
       aria-hidden="true"
     >
-      {Array.from({ length: ROWS }, (_, i) => (
+      {Array.from({ length: visibleColumns }, (_, i) => (
         <div key={`row-${i}`} className="relative h-8 w-16 shrink-0 border-l border-fern-600/25">
           {Array.from({ length: COLS }, (_, j) => (
             <div key={`col-${j}`} data-cell className="relative h-8 w-16 border-r border-t border-fern-600/25">
