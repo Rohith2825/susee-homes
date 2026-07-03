@@ -3,7 +3,7 @@
 The hero is a **three-phase cinematic**, all driven by one engine
 (`src/components/sections/Hero.tsx` + `useFrameSequence.ts`):
 
-| Phase | Behaviour | Asset |
+| Phase | Behaviour | Asset | 
 | --- | --- | --- |
 | 1 · Intro | Plays by itself once per session (auto-tour; any input cancels) | First ~half of the frame sequence |
 | 2 · Tour | User's scroll scrubs the camera through the community | Second half of the frame sequence |
