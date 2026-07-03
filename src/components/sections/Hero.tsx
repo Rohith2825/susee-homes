@@ -7,47 +7,30 @@ import { ANCHORS } from '@/lib/site';
 import { CompassRose } from '@/components/ui/icons';
 
 /**
- * THE PREMIERE — a one-take 4K film with live chapter narration.
+ * THE SCROLL FILM — a scroll-scrubbed 4K frame sequence.
  *
  * The client's 15s master (land → survey lines → streets → homes → dusk
- * arrival at the fountain plaza) plays natively at full 4K — bit-identical,
- * never re-encoded, never downscaled. Captions narrate four chapters in sync
- * with playback. While the film is on stage the page is pinned: scrolling
- * dissolves between chapters in both directions (film → max-quality still →
- * film; the seek happens invisibly under full cover). The film ends on its
- * true final frame and holds it, rock-steady — the identical max-quality
- * still locks on top, so the ending never drifts or re-renders. A final
- * scroll releases the page; scrolling back up to the top re-enters the film
- * at the previous phase with the same dissolve. Locale switches resume the
- * film exactly where it left off.
+ * arrival at the fountain plaza) is pre-rendered to a 60-frame sequence and
+ * painted, frame-accurate, onto a canvas driven purely by scroll position.
+ * The hero is a tall section whose inner container is pinned (sticky) while
+ * the film scrubs: scroll down runs the film forward, scroll up rewinds it —
+ * exactly to your gesture. Four chapters of caption narration cross-fade in
+ * sync with the scrub; a live chapter rail, timecode and compass sit on top.
+ * Under reduced motion the section collapses to one screen and rests on the
+ * final frame with the arrival captions. Frames are preloaded, so the scrub
+ * is instant once they land.
  */
 
-/** The full-quality 4K master is served from Cloudflare R2 (zero-egress CDN),
- *  not from the repo — it's far too large for git and static hosting. Swap
- *  this base for a custom domain (e.g. https://media.suseehomes.com) later and
- *  both URLs update at once. */
-const MEDIA_CDN = 'https://pub-3c0b0885a612406288a53205b2de790a.r2.dev';
-const VIDEO_SRC = `${MEDIA_CDN}/hero_final.mp4`;
-/** Flowing ending — seam-aligned micro-crossfade loop from the film's locked
- *  tail: every blended pair is a measured near-match, luma-normalized per
- *  frame, so every transition (incl. the wrap) sits at or below the water's
- *  own frame-to-frame motion. 7 cycles per file so the element restart is
- *  rare. Auto-detected: if the file is missing the ending holds the static
- *  final frame instead. */
-const LOOP_SRC = `${MEDIA_CDN}/fountain-loop-3.mp4`;
-const FALLBACK_DURATION = 15.0417;
-/** Chapter start times (s): land · layout · build · arrival. */
-const CHAPTER_T = [0, 2.6, 6.3, 9.2];
-/** Max-quality 4K stills, extracted straight from the film. */
-const CH_STILL = ['/hero-frames/hq/ch-0.jpg', '/hero-frames/hq/ch-1.jpg', '/hero-frames/hq/ch-2.jpg', '/hero-frames/hq/ch-3.jpg'];
+/** 60-frame sequence extracted straight from the 4K master (1440px, ~6MB). */
+const FRAME_COUNT = 60;
+const frameSrc = (i: number) => `/hero-frames/scrub/f_${String(i + 1).padStart(3, '0')}.jpg`;
+/** Master runtime (s) — drives the on-screen timecode only. */
+const DURATION = 15.04;
+/** Scroll-progress (0–1) at which each chapter's caption begins. Matches the
+ *  film's own chapter beats: land · layout · build · arrival. */
+const STAGE_STARTS = [0, 0.17, 0.42, 0.61];
+/** Max-quality 4K stills for the rail's hover previews. */
 const PV_STILL = ['/hero-frames/hq/pv-0.jpg', '/hero-frames/hq/pv-1.jpg', '/hero-frames/hq/pv-2.jpg', '/hero-frames/hq/pv-3.jpg'];
-const FINAL_STILL = '/hero-frames/hq/final.jpg';
-/** One gesture = one chapter (paced to the dissolve). */
-const COOLDOWN = 950;
-const DISSOLVE_IN = 450;
-const DISSOLVE_OUT = 700;
-const SEEN_KEY = 'susee-premiere';
-const CHECKPOINT_KEY = 'susee-premiere-t';
 
 interface Stage {
   headline: string;
@@ -64,41 +47,13 @@ function formatTC(s: number): string {
   return `${String(m).padStart(2, '0')}:${String(ss).padStart(2, '0')}`;
 }
 
-/** Flips true once this module has completed one Hero mount's session-entry
- *  effect. A locale switch remounts Hero client-side (same JS execution —
- *  this stays true), so the resumed chapter can be computed as the FIRST
- *  render's initial state, with no "phase 1, then jump" flash. A real page
- *  reload re-evaluates the module (this resets to false), which keeps the
- *  initial render matching the server-rendered HTML — no hydration mismatch. */
-let heroBooted = false;
-/** Consumed once per document. On a real refresh the module re-evaluates and
- *  this resets, so the premiere replays from the top; it persists across a
- *  client-side locale switch, which keeps the resume-from-checkpoint path. */
-let heroDocConsumed = false;
+const clamp01 = (v: number) => (v < 0 ? 0 : v > 1 ? 1 : v);
 
-function computeInitialChapter(): number {
-  if (!heroBooted || typeof window === 'undefined') return 0;
-  try {
-    if (sessionStorage.getItem(SEEN_KEY) === '1') return 3;
-    const resumeT = parseFloat(sessionStorage.getItem(CHECKPOINT_KEY) ?? '');
-    if (Number.isFinite(resumeT) && resumeT > 0.2) {
-      let c = 0;
-      for (let i = 0; i < CHAPTER_T.length; i++) if (resumeT >= CHAPTER_T[i] - 0.02) c = i;
-      return c;
-    }
-  } catch {
-    /* sessionStorage unavailable */
-  }
-  return 0;
-}
-
-function computeInitialArrived(): boolean {
-  if (!heroBooted || typeof window === 'undefined') return false;
-  try {
-    return sessionStorage.getItem(SEEN_KEY) === '1';
-  } catch {
-    return false;
-  }
+/** Which chapter a given scroll progress falls in. */
+function stageForProgress(p: number): number {
+  let s = 0;
+  for (let i = 0; i < STAGE_STARTS.length; i++) if (p >= STAGE_STARTS[i] - 0.0001) s = i;
+  return s;
 }
 
 export default function Hero() {
@@ -107,45 +62,18 @@ export default function Hero() {
   const chapters = t.raw('chapters') as Chapter[];
 
   const sectionRef = useRef<HTMLElement>(null);
-  const videoRef = useRef<HTMLVideoElement>(null);
-  const endRef = useRef<HTMLImageElement>(null);
-  const loopRef = useRef<HTMLVideoElement>(null);
-  const loopOkRef = useRef(false);
-  const coverRef = useRef<HTMLImageElement>(null);
-  const posterRef = useRef<HTMLImageElement>(null);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const framesRef = useRef<HTMLImageElement[]>([]);
   const stageBoxRef = useRef<HTMLDivElement>(null);
   const nudgeRef = useRef<HTMLDivElement>(null);
   const tcRef = useRef<HTMLSpanElement>(null);
   const railFillRefs = useRef<Array<HTMLDivElement | null>>([]);
+  const rafRef = useRef(0);
+  const lastFrameRef = useRef(-1);
+  const activeIdxRef = useRef(0);
 
-  const [activeIdx, setActiveIdx] = useState(computeInitialChapter);
+  const [activeIdx, setActiveIdx] = useState(0);
   const [introReady, setIntroReady] = useState(false);
-  const [arrived, setArrived] = useState(computeInitialArrived);
-  const activeIdxRef = useRef(activeIdx);
-  const releasedRef = useRef(false);
-
-  // Mark this module as booted once — only after mount, so the FIRST
-  // render (SSR or fresh hydration) always still matches computeInitial*'s
-  // pre-boot default. Only a later remount (locale switch) sees `true`.
-  useEffect(() => {
-    heroBooted = true;
-  }, []);
-
-  // On a fresh document load / refresh, wipe the premiere's saved state so the
-  // film restarts from chapter 0. A client-side locale switch skips this (flag
-  // persists) and keeps its resume-from-checkpoint behaviour. Runs before the
-  // premiere effect below, which only fires once introReady flips after the
-  // curtain — so the cleared state is what it reads.
-  useEffect(() => {
-    if (heroDocConsumed) return;
-    heroDocConsumed = true;
-    try {
-      sessionStorage.removeItem(SEEN_KEY);
-      sessionStorage.removeItem(CHECKPOINT_KEY);
-    } catch {
-      /* sessionStorage unavailable */
-    }
-  }, []);
 
   // ── Wait for the preloader curtain before the opening reveal ──
   useEffect(() => {
@@ -167,366 +95,149 @@ export default function Hero() {
     };
   }, []);
 
-  // ── Warm the chapter stills (seek covers + rail previews) ──
-  useEffect(() => {
-    const idle = (cb: () => void) =>
-      'requestIdleCallback' in window ? (window as Window & typeof globalThis).requestIdleCallback(cb) : setTimeout(cb, 800);
-    idle(() =>
-      [...CH_STILL, ...PV_STILL, FINAL_STILL].forEach((src) => {
-        const img = new Image();
-        img.src = src;
-      })
-    );
-  }, []);
-
-  // ── The premiere machine ──
+  // ── The scroll film — preload the sequence, paint the scrubbed frame ──
   useEffect(() => {
     if (!introReady) return;
     const section = sectionRef.current;
-    const video = videoRef.current;
-    const endStill = endRef.current;
-    if (!section || !video || !endStill) return;
+    const canvas = canvasRef.current;
+    if (!section || !canvas) return;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
 
     const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    const saveData = (navigator as { connection?: { saveData?: boolean } }).connection?.saveData === true;
-    const seen = sessionStorage.getItem(SEEN_KEY) === '1';
-    const lenis = window.__lenis;
 
-    // Reduced motion / data-saver: rest on the final still, free scroll, no film
-    if (reduced || saveData) {
-      releasedRef.current = true;
-      setArrived(true);
-      activeIdxRef.current = 3;
-      setActiveIdx(3);
-      if (posterRef.current) posterRef.current.src = FINAL_STILL;
-      return;
-    }
-
-    let chapter = 0;
-    let cooldownUntil = 0;
-    let seeking = false;
-    let completed = false;
-    let released = false;
-
-    const dur = () => (video.duration && !Number.isNaN(video.duration) ? video.duration : FALLBACK_DURATION);
-
-    const setChapter = (i: number) => {
-      chapter = i;
-      if (activeIdxRef.current !== i) {
-        activeIdxRef.current = i;
-        setActiveIdx(i);
-      }
-    };
-
-    const setReleased = (v: boolean) => {
-      released = v;
-      releasedRef.current = v;
-    };
-
-    /** The ending. With the generated loop available: the fountain flows on a
-     *  locked camera, forever. Otherwise: the film holds its true final frame,
-     *  the identical max-quality still locked on top — rock steady. */
-    const loop = loopRef.current;
-    const showEnding = (instant = false) => {
-      completed = true;
-      setArrived(true);
-      sessionStorage.setItem(SEEN_KEY, '1');
-      sessionStorage.removeItem(CHECKPOINT_KEY);
-      video.pause();
-      const ease = instant ? 'none' : 'opacity 500ms cubic-bezier(0.4,0,0.2,1)';
-      if (loopOkRef.current && loop) {
-        loop.currentTime = 0;
-        loop.play().catch(() => {});
-        loop.style.transition = ease;
-        loop.style.opacity = '1';
-        endStill.style.opacity = '0';
-      } else {
-        endStill.style.transition = ease;
-        endStill.style.opacity = '1';
-      }
-      if (tcRef.current) tcRef.current.textContent = `T+${formatTC(dur())} · ${formatTC(dur())}`;
-    };
-
-    const hideEnding = () => {
-      completed = false;
-      endStill.style.transition = `opacity ${DISSOLVE_IN}ms cubic-bezier(0.4,0,0.2,1)`;
-      endStill.style.opacity = '0';
-      if (loop) {
-        loop.style.transition = `opacity ${DISSOLVE_IN}ms cubic-bezier(0.4,0,0.2,1)`;
-        loop.style.opacity = '0';
-        window.setTimeout(() => loop.pause(), DISSOLVE_IN + 50);
-      }
-    };
-
-    // If the flowing-loop asset exists, upgrade the ending live (even if we
-    // are already resting on the static frame when it finishes loading).
-    if (loop) {
-      const onLoopReady = () => {
-        loopOkRef.current = true;
-        if (completed) showEnding(true);
+    // ── Preload every frame. Images are cached, so scrubbing swaps are
+    //    instant; a late-loading target upgrades its fallback on arrival. ──
+    const frames: HTMLImageElement[] = [];
+    for (let i = 0; i < FRAME_COUNT; i++) {
+      const img = new Image();
+      img.decoding = 'async';
+      img.src = frameSrc(i);
+      img.onload = () => {
+        if (i === lastFrameRef.current) draw(i);
       };
-      if (loop.readyState >= 2) onLoopReady();
-      else loop.addEventListener('loadeddata', onLoopReady, { once: true });
+      frames.push(img);
     }
+    framesRef.current = frames;
 
-    // ── Session entry state ──
-    if (seen) {
-      // Already premiered (revisit / language switch after finishing):
-      // rest on the flowing ending, page free — but the film stays one
-      // scroll-up away.
-      setReleased(true);
-      setChapter(3);
-      if (posterRef.current) posterRef.current.src = FINAL_STILL;
-      showEnding(true);
-    } else {
-      // Mid-film checkpoint from a locale switch — resume, don't restart
-      const resumeT = parseFloat(sessionStorage.getItem(CHECKPOINT_KEY) ?? '');
-      const resuming = Number.isFinite(resumeT) && resumeT > 0.2;
-      if (resuming) {
-        let c = 0;
-        for (let i = 0; i < CHAPTER_T.length; i++) if (resumeT >= CHAPTER_T[i] - 0.02) c = i;
-        setChapter(c);
-        if (posterRef.current) posterRef.current.src = CH_STILL[c];
+    /** Nearest already-decoded frame to `index` (keeps the canvas painted
+     *  while the exact frame is still in flight during the first scrub). */
+    const pickImg = (index: number): HTMLImageElement | null => {
+      const c = index < 0 ? 0 : index > FRAME_COUNT - 1 ? FRAME_COUNT - 1 : index;
+      const exact = frames[c];
+      if (exact && exact.complete && exact.naturalWidth) return exact;
+      for (let d = 1; d < FRAME_COUNT; d++) {
+        const a = frames[c - d];
+        if (a && a.complete && a.naturalWidth) return a;
+        const b = frames[c + d];
+        if (b && b.complete && b.naturalWidth) return b;
       }
-      lenis?.stop();
-      window.scrollTo(0, 0);
-      const startFilm = () => {
-        if (resuming) {
-          try {
-            video.currentTime = resumeT;
-          } catch {
-            /* not seekable yet */
-          }
-        }
-        video.play().catch(() => {});
-      };
-      if (video.readyState >= 2) setTimeout(startFilm, resuming ? 0 : 350);
-      else {
-        const once = () => {
-          video.removeEventListener('canplay', once);
-          startFilm();
-        };
-        video.addEventListener('canplay', once);
+      return null;
+    };
+
+    const draw = (index: number) => {
+      const img = pickImg(index);
+      if (!img) return;
+      const cw = canvas.width;
+      const ch = canvas.height;
+      const iw = img.naturalWidth;
+      const ih = img.naturalHeight;
+      const scale = Math.max(cw / iw, ch / ih);
+      const dw = iw * scale;
+      const dh = ih * scale;
+      ctx.drawImage(img, (cw - dw) / 2, (ch - dh) / 2, dw, dh);
+    };
+
+    const resize = () => {
+      const dpr = Math.min(window.devicePixelRatio || 1, 2);
+      const w = Math.round(canvas.clientWidth * dpr);
+      const h = Math.round(canvas.clientHeight * dpr);
+      if (w === canvas.width && h === canvas.height) return;
+      canvas.width = w;
+      canvas.height = h;
+      draw(lastFrameRef.current < 0 ? 0 : lastFrameRef.current);
+    };
+
+    const applyStage = (s: number) => {
+      if (s !== activeIdxRef.current) {
+        activeIdxRef.current = s;
+        setActiveIdx(s);
       }
-    }
+    };
 
-    // ── Live narration + ending handoff + rail fills (rAF) ──
-    let raf = 0;
-    const tick = () => {
-      const d = dur();
-      const now = video.currentTime;
-
-      if (!seeking && !completed) {
-        let c = 0;
-        for (let i = 0; i < CHAPTER_T.length; i++) if (now >= CHAPTER_T[i] - 0.02) c = i;
-        if (c !== chapter) setChapter(c);
-      }
-
-      // the film reaches its true final frame — hold it, rock-steady
-      if (!completed && !seeking && (video.ended || now >= d - 0.05)) {
-        showEnding();
-      }
-
-      // rail fills
-      const ends = [...CHAPTER_T.slice(1), d];
-      railFillRefs.current.forEach((el, i) => {
-        if (!el) return;
-        const f = completed
-          ? i <= 3
-            ? 1
-            : 0
-          : Math.max(0, Math.min(1, (now - CHAPTER_T[i]) / (ends[i] - CHAPTER_T[i])));
-        el.style.transform = `scaleY(${f})`;
+    // ── Reduced motion: rest on the final frame, arrival captions, free scroll ──
+    if (reduced) {
+      applyStage(3);
+      lastFrameRef.current = FRAME_COUNT - 1;
+      resize();
+      const last = frames[FRAME_COUNT - 1];
+      const paint = () => draw(FRAME_COUNT - 1);
+      if (last.complete && last.naturalWidth) paint();
+      else last.onload = paint;
+      railFillRefs.current.forEach((el) => {
+        if (el) el.style.transform = 'scaleY(1)';
       });
+      if (tcRef.current) tcRef.current.textContent = `T+${formatTC(DURATION)} · ${formatTC(DURATION)}`;
+      if (nudgeRef.current) nudgeRef.current.style.opacity = '0';
+      window.addEventListener('resize', resize);
+      return () => window.removeEventListener('resize', resize);
+    }
 
-      // survey timecode
-      if (!completed && tcRef.current) tcRef.current.textContent = `T+${formatTC(now)} · ${formatTC(d)}`;
-
-      raf = requestAnimationFrame(tick);
+    // ── Scrub: map scroll position → frame + chapter + rail + timecode ──
+    const progress = () => {
+      const total = section.offsetHeight - window.innerHeight;
+      if (total <= 0) return 0;
+      return clamp01(-section.getBoundingClientRect().top / total);
     };
-    raf = requestAnimationFrame(tick);
 
-    // ── Chapter transitions: a true film dissolve, both directions ──
-    let dissolveTimer = 0;
-    const seekChapter = (i: number) => {
-      const cover = coverRef.current;
-      setChapter(i);
-      seeking = true;
-      if (completed) hideEnding();
-      if (cover) {
-        cover.src = CH_STILL[i];
-        cover.style.transition = `opacity ${DISSOLVE_IN}ms cubic-bezier(0.4,0,0.2,1)`;
-        cover.style.opacity = '1';
+    const tick = () => {
+      const p = progress();
+
+      const idx = Math.round(p * (FRAME_COUNT - 1));
+      if (idx !== lastFrameRef.current) {
+        lastFrameRef.current = idx;
+        draw(idx);
       }
-      window.clearTimeout(dissolveTimer);
-      dissolveTimer = window.setTimeout(() => {
-        const onSeeked = () => {
-          video.removeEventListener('seeked', onSeeked);
-          video.play().catch(() => {});
-          seeking = false;
-          if (cover) {
-            requestAnimationFrame(() => {
-              cover.style.transition = `opacity ${DISSOLVE_OUT}ms cubic-bezier(0.4,0,0.2,1)`;
-              cover.style.opacity = '0';
-            });
-          }
-        };
-        video.addEventListener('seeked', onSeeked);
-        try {
-          video.currentTime = CHAPTER_T[i] + 0.01;
-        } catch {
-          video.removeEventListener('seeked', onSeeked);
-          seeking = false;
+
+      applyStage(stageForProgress(p));
+
+      for (let i = 0; i < railFillRefs.current.length; i++) {
+        const el = railFillRefs.current[i];
+        if (!el) continue;
+        const start = STAGE_STARTS[i];
+        const end = i + 1 < STAGE_STARTS.length ? STAGE_STARTS[i + 1] : 1;
+        el.style.transform = `scaleY(${clamp01((p - start) / (end - start))})`;
+      }
+
+      if (tcRef.current) tcRef.current.textContent = `T+${formatTC(p * DURATION)} · ${formatTC(DURATION)}`;
+      if (nudgeRef.current) nudgeRef.current.style.opacity = p > 0.015 ? '0' : '';
+
+      rafRef.current = requestAnimationFrame(tick);
+    };
+
+    // Run the scrub loop only while the hero is on screen.
+    const io = new IntersectionObserver(
+      (entries) => {
+        const visible = entries.some((e) => e.isIntersecting);
+        if (visible && !rafRef.current) {
+          rafRef.current = requestAnimationFrame(tick);
+        } else if (!visible && rafRef.current) {
+          cancelAnimationFrame(rafRef.current);
+          rafRef.current = 0;
         }
-      }, DISSOLVE_IN + 30);
-    };
+      },
+      { threshold: 0 }
+    );
 
-    // ── Release into the site ──
-    const release = (scrollPast = true) => {
-      if (released) return;
-      setReleased(true);
-      sessionStorage.setItem(SEEN_KEY, '1');
-      sessionStorage.removeItem(CHECKPOINT_KEY);
-      lenis?.start();
-      if (scrollPast) {
-        const y = section.offsetTop + section.offsetHeight;
-        if (lenis) lenis.scrollTo(y, { duration: 1.25, easing: (x: number) => 1 - Math.pow(1 - x, 3) });
-        else window.scrollTo({ top: y, behavior: 'smooth' });
-      }
-    };
-
-    /** Scroll-up at the very top re-enters the film at the previous phase. */
-    const reengage = () => {
-      setReleased(false);
-      lenis?.stop();
-      if (completed) {
-        // from the resting ending, the previous phase is the arrival itself
-        seekChapter(3);
-      } else {
-        seekChapter(Math.max(0, chapter - 1));
-      }
-    };
-
-    const advance = (dirn: 1 | -1) => {
-      const nowMs = performance.now();
-      if (nowMs < cooldownUntil) return;
-      // From the resting ending, the previous phase is the arrival itself
-      if (completed && dirn === -1) {
-        cooldownUntil = nowMs + COOLDOWN;
-        seekChapter(3);
-        return;
-      }
-      const next = chapter + dirn;
-      if (next < 0) return;
-      cooldownUntil = nowMs + COOLDOWN;
-      if (next > CHAPTER_T.length - 1) {
-        release();
-        return;
-      }
-      seekChapter(next);
-    };
-
-    const atTop = () => window.scrollY <= 4;
-
-    // ── Input grammar ──
-    const onWheel = (e: WheelEvent) => {
-      if (Math.abs(e.deltaY) < 6) return;
-      if (!released) {
-        e.preventDefault();
-        advance(e.deltaY > 0 ? 1 : -1);
-        return;
-      }
-      // released: page scrolls freely — but scrolling up at the top re-enters
-      if (e.deltaY < 0 && atTop()) {
-        e.preventDefault();
-        const nowMs = performance.now();
-        if (nowMs < cooldownUntil) return;
-        cooldownUntil = nowMs + COOLDOWN;
-        reengage();
-      }
-    };
-    let touchY: number | null = null;
-    const onTouchStart = (e: TouchEvent) => {
-      touchY = e.touches[0]?.clientY ?? null;
-    };
-    const onTouchMove = (e: TouchEvent) => {
-      if (!released) e.preventDefault();
-    };
-    const onTouchEnd = (e: TouchEvent) => {
-      if (touchY == null) return;
-      const dy = touchY - (e.changedTouches[0]?.clientY ?? touchY);
-      touchY = null;
-      if (Math.abs(dy) < 36) return;
-      if (!released) {
-        advance(dy > 0 ? 1 : -1);
-      } else if (dy < 0 && atTop()) {
-        const nowMs = performance.now();
-        if (nowMs < cooldownUntil) return;
-        cooldownUntil = nowMs + COOLDOWN;
-        reengage();
-      }
-    };
-    const onKey = (e: KeyboardEvent) => {
-      if (released) return;
-      if (['ArrowDown', 'PageDown', ' '].includes(e.key)) {
-        e.preventDefault();
-        advance(1);
-      } else if (['ArrowUp', 'PageUp'].includes(e.key)) {
-        e.preventDefault();
-        advance(-1);
-      }
-    };
-    const onGoto = (e: Event) => {
-      const c = (e as CustomEvent<number>).detail;
-      if (typeof c !== 'number') return;
-      if (released) {
-        if (!atTop()) return;
-        setReleased(false);
-        lenis?.stop();
-      }
-      cooldownUntil = performance.now() + COOLDOWN;
-      seekChapter(Math.max(0, Math.min(CHAPTER_T.length - 1, c)));
-    };
-    const onVisibility = () => {
-      if (!document.hidden && !released && !completed && video.paused && !seeking) video.play().catch(() => {});
-    };
-    // Navbar anchor clicks must escape the pin
-    const onDocClick = (e: MouseEvent) => {
-      if (released) return;
-      const a = (e.target as HTMLElement).closest<HTMLAnchorElement>('a[href*="#"]');
-      if (!a || !a.hash || a.hash === '#top') return;
-      const targetEl = document.querySelector(a.hash);
-      if (targetEl && sectionRef.current && !sectionRef.current.contains(targetEl)) {
-        release(false);
-      }
-    };
-
-    const opts: AddEventListenerOptions = { passive: false };
-    window.addEventListener('wheel', onWheel, opts);
-    window.addEventListener('touchstart', onTouchStart, { passive: true });
-    window.addEventListener('touchmove', onTouchMove, opts);
-    window.addEventListener('touchend', onTouchEnd, { passive: true });
-    window.addEventListener('keydown', onKey, opts);
-    window.addEventListener('susee:hero-goto', onGoto);
-    document.addEventListener('visibilitychange', onVisibility);
-    document.addEventListener('click', onDocClick, true);
+    resize();
+    io.observe(section);
+    window.addEventListener('resize', resize);
 
     return () => {
-      cancelAnimationFrame(raf);
-      window.clearTimeout(dissolveTimer);
-      // Locale switch mid-film: checkpoint the playhead so the next mount resumes
-      if (!released && !completed && video.currentTime > 0.2) {
-        sessionStorage.setItem(CHECKPOINT_KEY, String(video.currentTime));
-      }
-      window.removeEventListener('wheel', onWheel, opts);
-      window.removeEventListener('touchstart', onTouchStart);
-      window.removeEventListener('touchmove', onTouchMove, opts);
-      window.removeEventListener('touchend', onTouchEnd);
-      window.removeEventListener('keydown', onKey, opts);
-      window.removeEventListener('susee:hero-goto', onGoto);
-      document.removeEventListener('visibilitychange', onVisibility);
-      document.removeEventListener('click', onDocClick, true);
-      lenis?.start();
+      io.disconnect();
+      if (rafRef.current) cancelAnimationFrame(rafRef.current);
+      rafRef.current = 0;
+      window.removeEventListener('resize', resize);
     };
   }, [introReady]);
 
@@ -567,74 +278,38 @@ export default function Hero() {
     return () => ctx.revert();
   }, [activeIdx, introReady]);
 
+  // Chapter rail → scroll the film to that chapter's beat
   const jumpToChapter = useCallback((c: number) => {
-    window.dispatchEvent(new CustomEvent('susee:hero-goto', { detail: c }));
+    const section = sectionRef.current;
+    if (!section) return;
+    const total = section.offsetHeight - window.innerHeight;
+    const y = section.offsetTop + STAGE_STARTS[c] * total + 2;
+    if (window.__lenis) window.__lenis.scrollTo(y, { duration: 1.1 });
+    else window.scrollTo({ top: y, behavior: 'smooth' });
   }, []);
 
   const stage = stages[activeIdx] ?? stages[0];
 
   return (
-    <section ref={sectionRef} data-hero="" className="relative h-screen bg-ink-950" aria-label={t('tagline')}>
+    <section ref={sectionRef} data-hero="" className="hero-scrub relative bg-ink-950" aria-label={t('tagline')}>
       {/* Hide the native scrollbar site-wide — Lenis owns the scroll feel */}
       <style>{`html{scrollbar-width:none;-ms-overflow-style:none}html::-webkit-scrollbar{display:none;width:0;height:0}`}</style>
       <div className="grain sticky top-0 h-screen overflow-hidden supports-[height:100dvh]:h-dvh">
-        {/* Opening still paints instantly (max-quality 4K frame from the film) */}
+        {/* Poster — the film's first frame paints instantly, before the canvas
+            takes over on the first draw */}
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
-          ref={posterRef}
-          src={arrived ? FINAL_STILL : (CH_STILL[activeIdx] ?? CH_STILL[0])}
+          src={frameSrc(0)}
           alt=""
           aria-hidden="true"
           className="pointer-events-none absolute inset-0 h-full w-full object-cover"
         />
 
-        {/* The film — native 4K playback, exactly as delivered */}
-        <video
-          ref={videoRef}
-          src={VIDEO_SRC}
-          muted
-          playsInline
-          preload="auto"
+        {/* The scroll film — frame-accurate, painted from scroll position */}
+        <canvas
+          ref={canvasRef}
           aria-hidden="true"
-          className="pointer-events-none absolute inset-0 h-full w-full object-cover"
-        />
-
-        {/* The ending — the film's true final frame, locked and motionless */}
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          ref={endRef}
-          src={FINAL_STILL}
-          alt=""
-          aria-hidden="true"
-          className="pointer-events-none absolute inset-0 h-full w-full object-cover opacity-0"
-        />
-
-        {/* Flowing ending (auto-detected): seamless natural-seam loop cut
-            from the film's locked fountain tail. preload="metadata" (not
-            "auto") so this ~48MB file doesn't eagerly buffer on page load and
-            fight the main film for bandwidth — it upgrades in once loadeddata
-            fires or when showEnding calls loop.play(); until then the ending
-            rests on the identical static frame. Pure load-timing win, the
-            ending looks the same. */}
-        <video
-          ref={loopRef}
-          src={LOOP_SRC}
-          muted
-          loop
-          playsInline
-          preload="metadata"
-          aria-hidden="true"
-          className="pointer-events-none absolute inset-0 h-full w-full object-cover opacity-0"
-        />
-
-        {/* Seek cover — the matching max-quality still hides every chapter jump */}
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          ref={coverRef}
-          src={CH_STILL[0]}
-          alt=""
-          aria-hidden="true"
-          className="pointer-events-none absolute inset-0 h-full w-full object-cover opacity-0"
+          className="pointer-events-none absolute inset-0 block h-full w-full"
         />
 
         {/* Cinematic grade — the film's golden light still leads, but the
@@ -710,7 +385,7 @@ export default function Hero() {
           </div>
         </div>
 
-        {/* ── Chapter rail (desktop) — live playback fill + still previews ── */}
+        {/* ── Chapter rail (desktop) — scroll-fill progress + still previews ── */}
         <div
           data-hero-fade=""
           className="pointer-events-none absolute inset-y-0 right-0 hidden w-[340px] bg-gradient-to-l from-ink-950/78 via-ink-950/38 to-transparent md:block"
@@ -776,9 +451,7 @@ export default function Hero() {
         <div
           ref={nudgeRef}
           data-hero-fade=""
-          className={`pointer-events-none absolute bottom-7 left-1/2 flex -translate-x-1/2 flex-col items-center gap-2 text-ivory-50/60 transition-opacity duration-700 ${
-            activeIdx > 0 && !arrived ? 'opacity-0' : ''
-          }`}
+          className="pointer-events-none absolute bottom-7 left-1/2 flex -translate-x-1/2 flex-col items-center gap-2 text-ivory-50/60 transition-opacity duration-700"
         >
           <span className="micro-label">{t('scroll')}</span>
           <span className="animate-[nudge-fade_2.4s_ease-in-out_infinite]">

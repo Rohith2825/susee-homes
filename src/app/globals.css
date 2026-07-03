@@ -652,6 +652,19 @@ html.is-scrolling .grain::after {
 
 /* ─── Hero helpers ─────────────────────────────────────────── */
 
+/* Scroll-scrub hero — a tall section whose sticky inner pins while the
+   frame sequence is scrubbed by scroll. Collapses to one screen (no scrub)
+   under reduced motion. */
+.hero-scrub {
+  height: 340vh;
+}
+@media (prefers-reduced-motion: reduce) {
+  .hero-scrub {
+    height: 100vh;
+    height: 100svh;
+  }
+}
+
 @keyframes nudge-fade {
   0%, 100% { opacity: 0.35; transform: translateY(0); }
   50% { opacity: 0.9; transform: translateY(6px); }
