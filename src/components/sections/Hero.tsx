@@ -22,14 +22,19 @@ import { CompassRose } from '@/components/ui/icons';
  * film exactly where it left off.
  */
 
-const VIDEO_SRC = '/hero_videos/hero_final.mp4';
+/** The full-quality 4K master is served from Cloudflare R2 (zero-egress CDN),
+ *  not from the repo — it's far too large for git and static hosting. Swap
+ *  this base for a custom domain (e.g. https://media.suseehomes.com) later and
+ *  both URLs update at once. */
+const MEDIA_CDN = 'https://pub-3c0b0885a612406288a53205b2de790a.r2.dev';
+const VIDEO_SRC = `${MEDIA_CDN}/hero_final.mp4`;
 /** Flowing ending — seam-aligned micro-crossfade loop from the film's locked
  *  tail: every blended pair is a measured near-match, luma-normalized per
  *  frame, so every transition (incl. the wrap) sits at or below the water's
  *  own frame-to-frame motion. 7 cycles per file so the element restart is
  *  rare. Auto-detected: if the file is missing the ending holds the static
  *  final frame instead. */
-const LOOP_SRC = '/hero_videos/fountain-loop-3.mp4';
+const LOOP_SRC = `${MEDIA_CDN}/fountain-loop-3.mp4`;
 const FALLBACK_DURATION = 15.0417;
 /** Chapter start times (s): land · layout · build · arrival. */
 const CHAPTER_T = [0, 2.6, 6.3, 9.2];

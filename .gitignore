@@ -28,3 +28,6 @@ screenshots/
 
 # Large source masters — kept locally / in backup, never in git
 source-assets/
+
+# Hero videos are served from Cloudflare R2, not the repo
+public/hero_videos/*.mp4
