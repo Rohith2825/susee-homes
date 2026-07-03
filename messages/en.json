@@ -1,0 +1,278 @@
+{
+  "meta": {
+    "title": "Susee Homes | Build Your Future",
+    "description": "Susee Homes — Premium plotted developments and custom home construction in Chennai's fastest-growing corridor."
+  },
+  "preloader": {
+    "brand": "Susee Homes",
+    "tagline": "Your Trust. Our Asset."
+  },
+  "nav": {
+    "project": "Project",
+    "buildCost": "Build Cost",
+    "process": "Process",
+    "founder": "Founder",
+    "contact": "Contact",
+    "bookVisit": "Book Visit",
+    "menuLabel": "Toggle menu",
+    "langLabel": "தமிழ்"
+  },
+  "hero": {
+    "tagline": "Built on trust. Designed for life.",
+    "scroll": "Scroll",
+    "chapters": [
+      { "index": "01", "label": "The Land" },
+      { "index": "02", "label": "The Layout" },
+      { "index": "03", "label": "The Build" },
+      { "index": "04", "label": "The Arrival" }
+    ],
+    "stages": [
+      {
+        "headline": "Every Susee home\nbegins with the land.",
+        "sub": "6.72 acres of DTCP-approved, RERA-certified land in Poonamallee, Chennai."
+      },
+      {
+        "headline": "We develop it —\nroads, plots, open spaces.",
+        "sub": "181 individual plots · Full infrastructure · 40% open green space."
+      },
+      {
+        "headline": "Then we raise your home,\nbrick by brick.",
+        "sub": "Our in-house construction arm handles design, build, and handover — one team, zero compromise."
+      },
+      {
+        "headline": "ALIGHT —\nyour next chapter\nin Poonamallee.",
+        "sub": "2 min from Kuthambakkam · Metro-ready corridor · Book your site visit today."
+      }
+    ],
+    "coordinates": "13.0480° N · 80.0966° E",
+    "location": "Poonamallee — Chennai, IN",
+    "cta": "Book a Site Visit",
+    "ctaSecondary": "Explore ALIGHT"
+  },
+  "ticker": {
+    "items": [
+      "DTCP Approved",
+      "RERA Certified",
+      "6.72 Acres",
+      "181 Individual Plots",
+      "40% Open Space",
+      "Est. 2016",
+      "500+ Families Housed",
+      "Poonamallee · Chennai"
+    ]
+  },
+  "stats": {
+    "eyebrow": "The Numbers",
+    "items": [
+      { "num": "6.72", "suffix": "", "label": "Acres of Premium Land" },
+      { "num": "181", "suffix": "+", "label": "Individual Plots" },
+      { "num": "40", "suffix": "%", "label": "Percent Open Space" },
+      { "num": "2016", "suffix": "", "label": "Established" }
+    ]
+  },
+  "pillars": {
+    "eyebrow": "What We Do",
+    "heading": "Not just the land —\nwe build the home too.",
+    "sub": "Susee Homes delivers both under one roof — premium land and the expertise to build on it.",
+    "cards": [
+      {
+        "title": "Plotted Developments",
+        "body": "DTCP-approved and RERA-certified layouts with clear documentation, full infrastructure — roads, drainage, electricity — and transparent pricing. Buy your land with complete legal confidence.",
+        "points": ["DTCP & RERA Certified", "Clear title documentation", "Full infrastructure ready", "Transparent pricing"]
+      },
+      {
+        "title": "Custom Home Construction",
+        "body": "Our in-house construction team designs and builds your home on your plot, end-to-end. From architectural concept to handover, every detail is handled by a single trusted partner.",
+        "points": ["Architectural design included", "Premium materials", "Milestone-based payments", "Dedicated project manager"]
+      }
+    ]
+  },
+  "process": {
+    "eyebrow": "How It Works",
+    "heading": "Four steps to\nyour new home.",
+    "steps": [
+      { "n": "01", "title": "Choose Your Plot", "body": "Browse available plots with clear pricing, documentation, and site visit appointments." },
+      { "n": "02", "title": "Design Your Home", "body": "Work with our architects to design a home that fits your lifestyle and plot dimensions." },
+      { "n": "03", "title": "We Build It", "body": "Our construction team handles everything — materials, labour, timelines, and quality checks." },
+      { "n": "04", "title": "Move In", "body": "Receive your keys. We hand over a fully finished home with all utilities connected." }
+    ]
+  },
+  "alight": {
+    "eyebrow": "Flagship Project",
+    "heading": "Project ALIGHT\nPoonamallee, Chennai",
+    "tags": ["DTCP Approved", "RERA Certified", "Poonamallee, Chennai", "6.72 Acres", "181 Plots"],
+    "body": "ALIGHT is a premium plotted development at the heart of Chennai's fastest-growing corridor. Located moments from Kuthambakkam, Nazarathpet Metro, and Poonamallee, it offers the ideal combination of connectivity, serenity, and strong investment potential.",
+    "connectivityEyebrow": "Connectivity",
+    "connectivity": [
+      { "time": "2 min", "place": "Kuthambakkam" },
+      { "time": "8 min", "place": "Nazarathpet Metro Station" },
+      { "time": "10 min", "place": "Poonamallee Town Centre" },
+      { "time": "25 min", "place": "Chennai Central" }
+    ],
+    "amenitiesEyebrow": "Amenities",
+    "amenities": [
+      "Landscaped parks",
+      "Children's play area",
+      "CCTV security",
+      "Gated entrance",
+      "Street lighting",
+      "Underground drainage",
+      "Electricity infrastructure",
+      "Tar roads inside layout",
+      "40% open space",
+      "Vastu-compliant plots"
+    ],
+    "figures": [
+      { "num": "627–2,259", "label": "sq ft plot sizes available" },
+      { "num": "181", "label": "total registered plots" },
+      { "num": "6.72", "label": "acres total project area" }
+    ],
+    "masterplanLabel": "Masterplan — Survey View",
+    "cta": "Book a Site Visit"
+  },
+  "estimator": {
+    "eyebrow": "Home Cost Estimator",
+    "heading": "Describe your\ndream home.",
+    "sub": "Type what you want — bedrooms, size, style, floors — in plain English (or Tamil). We'll parse it instantly and give you a ball-park build estimate.",
+    "try": "Try:",
+    "examples": [
+      "3 BHK modern home, 1800 sqft, ground floor",
+      "4 bedroom duplex villa with 2400 sqft",
+      "Traditional 2 bhk house, 1200 sqft"
+    ],
+    "placeholder": "e.g. I want a 3 BHK modern home, around 1800 sqft, ground floor only, with an open kitchen...",
+    "detailsFound": "Details found:",
+    "labels": {
+      "bedrooms": "Bedrooms",
+      "bathrooms": "Bathrooms",
+      "area": "Area",
+      "floors": "Floors",
+      "style": "Style"
+    },
+    "estimateTitle": "Estimated Build Cost",
+    "estimateNote": "~{area} sqft · construction only, excl. land",
+    "quoteCta": "Get exact quote",
+    "empty": "Start typing above and your instant estimate will appear here.",
+    "waMessage": "Hi Susee Homes! I'm interested in building a home.\n\nDetails: {summary}\n\nPlease share more info about Project ALIGHT."
+  },
+  "upcoming": {
+    "eyebrow": "Upcoming Projects",
+    "heading": "More landmark\ndevelopments coming.",
+    "comingSoon": "Coming Soon",
+    "cards": [
+      { "name": "Project SOLEIL", "loc": "Oragadam, Chennai", "area": "~10 Acres", "status": "Pre-launch" },
+      { "name": "Project VERDANT", "loc": "Tambaram, Chennai", "area": "~8 Acres", "status": "Upcoming 2025" },
+      { "name": "Project CREST", "loc": "Sriperumbudur, Chennai", "area": "~12 Acres", "status": "Upcoming 2025" }
+    ]
+  },
+  "founder": {
+    "eyebrow": "The Man Behind Susee Homes",
+    "heading": "Two decades.\nOne promise.",
+    "name": "Mr. Rajesh BR",
+    "role": "Founder & Managing Director",
+    "chips": [
+      "20+ Years in Chennai Real Estate",
+      "DTCP & RERA Specialist",
+      "500+ Families Housed",
+      "Zero Payment Disputes"
+    ],
+    "quote": "I don't sell land. I lay the foundation for someone's dream.",
+    "bio1": "I started Susee Homes in 2004 with one conviction: that a family's biggest financial decision deserves complete transparency. No hidden charges, no inflated promises — just clean title, full infrastructure, and a builder who answers your call. Twenty years later, that's still the only way I know how to do this.",
+    "bio2": "Project ALIGHT is the most carefully planned work of my career — a 6.72-acre master community where every detail, from the road widths to the open-space ratio, was decided with one question in mind: would I want my own family to live here?",
+    "journeyEyebrow": "Our Journey",
+    "milestones": [
+      { "year": "2004", "label": "Founded Susee Homes", "sub": "Started with a single plot layout in Koyambedu" },
+      { "year": "2010", "label": "100 families housed", "sub": "Expanded to North Chennai and Poonamallee belt" },
+      { "year": "2017", "label": "Construction arm launched", "sub": "End-to-end home building added to the portfolio" },
+      { "year": "2024", "label": "Project ALIGHT", "sub": "6.72-acre master-planned community in Poonamallee" }
+    ]
+  },
+  "testimonials": {
+    "eyebrow": "Words From Our Families",
+    "heading": "The trust of\n500 families.",
+    "items": [
+      {
+        "quote": "Every document they promised was on the table before I paid a single rupee. Patta, EC, approved layout — all of it. That's when I knew this was different.",
+        "name": "R. Karthikeyan",
+        "role": "Plot Owner · Phase 1"
+      },
+      {
+        "quote": "We visited on a Sunday, and Mr. Rajesh himself walked us through the layout. No pressure, no countdown offers. Just the land, the papers, and honest answers.",
+        "name": "S. Priya Dharshini",
+        "role": "Homeowner · Poonamallee"
+      },
+      {
+        "quote": "They built our house on the plot they sold us — one team from registration to keys. The milestone payments meant we always knew exactly where our money went.",
+        "name": "Anand & Revathi",
+        "role": "Custom Home · 3 BHK"
+      },
+      {
+        "quote": "I compared six layouts in this corridor before choosing ALIGHT. Nothing else came close on documentation clarity and the width of the internal roads.",
+        "name": "M. Ilangovan",
+        "role": "Investor · Chennai"
+      }
+    ]
+  },
+  "faq": {
+    "eyebrow": "Common Questions",
+    "heading": "Everything, answered\nbefore you ask.",
+    "items": [
+      {
+        "q": "Is Project ALIGHT DTCP approved and RERA registered?",
+        "a": "Yes. ALIGHT is fully DTCP-approved and RERA-certified. Every plot carries clear title documentation, and we share all approvals — layout sanction, patta, and encumbrance certificate — before you commit to anything."
+      },
+      {
+        "q": "What plot sizes are available?",
+        "a": "The layout offers 181 individual plots ranging from 627 to 2,259 sq ft, including Vastu-compliant orientations. Our team will walk you through available plots, corner positions, and road-facing options during your site visit."
+      },
+      {
+        "q": "Can Susee Homes also build my house?",
+        "a": "Yes — that's our second pillar. Our in-house construction arm handles everything from architectural design to handover: materials, labour, timelines, and quality checks, with a dedicated project manager and milestone-based payments."
+      },
+      {
+        "q": "What documents will I receive?",
+        "a": "You receive the complete legal set: mother document copies, DTCP-approved layout plan, patta transfer, up-to-date encumbrance certificate, and your registered sale deed. We believe a family's biggest financial decision deserves complete transparency."
+      },
+      {
+        "q": "How do payments work?",
+        "a": "Plot purchases follow transparent, published pricing — no hidden charges. Construction contracts are milestone-based: you pay as each stage completes, from foundation to finishing, and every stage is documented."
+      },
+      {
+        "q": "How do I book a site visit?",
+        "a": "Message us on WhatsApp or call +91 96268 55553. Our team arranges private site visits every day of the week — the site is just 2 minutes from Kuthambakkam on the metro-ready Poonamallee corridor."
+      }
+    ]
+  },
+  "cta": {
+    "eyebrow": "Get in Touch",
+    "heading": "Reserve your plot.\nVisit the site today.",
+    "sub": "Our team is ready to arrange a private site visit and walk you through available plots.",
+    "whatsapp": "WhatsApp Us",
+    "call": "Call +91 96268 55553",
+    "waMessage": "Hi, I'm interested in Project ALIGHT plots."
+  },
+  "footer": {
+    "tagline": "Your Trust. Our Asset.",
+    "blurb": "Premium plotted developments and custom home construction in Chennai's fastest-growing corridor.",
+    "explore": "Explore",
+    "links": {
+      "project": "Project ALIGHT",
+      "estimator": "Build Cost",
+      "process": "Process",
+      "founder": "Founder",
+      "faq": "FAQ",
+      "contact": "Contact"
+    },
+    "reach": "Reach Us",
+    "phone": "+91 96268 55553",
+    "whatsapp": "WhatsApp",
+    "location": "Project ALIGHT · Poonamallee, Chennai",
+    "visitNote": "Site visits daily · 9 AM – 6 PM",
+    "certified": "DTCP & RERA Certified",
+    "place": "Poonamallee, Chennai",
+    "rights": "Susee Homes",
+    "backToTop": "Back to top",
+    "coordinates": "13.0480° N · 80.0966° E",
+    "scale": "Scale 1 : Trust"
+  }
+}

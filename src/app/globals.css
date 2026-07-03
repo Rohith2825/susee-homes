@@ -1,0 +1,655 @@
+@import 'tailwindcss';
+
+/* ────────────────────────────────────────────────────────────────
+   SUSEE HOMES — "The Masterplan" design system
+   Quiet-luxury editorial · land-survey motif · ink & limestone
+   ──────────────────────────────────────────────────────────────── */
+
+@theme {
+  /* Ink (near-black greens — dark canvas) */
+  --color-ink-950: #0a100d;
+  --color-ink-900: #0e1713;
+  --color-ink-800: #13211a;
+  --color-ink-700: #1a2d23;
+
+  /* Brand ferns (preserved from brand) */
+  --color-fern-700: #1b4332;
+  --color-fern-600: #2d6a4f;
+  --color-fern-500: #40916c;
+  --color-mint-400: #74d4a0;
+  --color-mint-100: #d8f3dc;
+
+  /* Limestone (light canvas) */
+  --color-ivory-50: #f7f4ec;
+  --color-ivory-100: #f1ecdf;
+  --color-ivory-200: #e5deca;
+  --color-ivory-300: #d6cdb2;
+
+  /* Bronze/brass (evolved gold — greyed down to adulthood) */
+  --color-bronze-700: #79643a;
+  --color-bronze-600: #8a7040;
+  --color-bronze-500: #a18856;
+  --color-brass-600: #96762e;
+  --color-brass-500: #b5830a;
+  --color-brass-300: #d9bc7a;
+  --color-brass-200: #ecd39c;
+
+  /* Text */
+  --color-text-strong: #141c17;
+  --color-text-muted: #5c6259;
+
+  --breakpoint-xs: 30rem;
+}
+
+:root {
+  /* Locale-switched font stacks (Tamil overrides in [lang="ta"]) */
+  --display: var(--font-fraunces), 'Georgia', serif;
+  --body: var(--font-archivo), system-ui, sans-serif;
+  --mono: var(--font-plex-mono), 'SFMono-Regular', monospace;
+
+  /* Motion */
+  --ease-expo: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-soft: cubic-bezier(0.45, 0, 0.15, 1);
+  --dur-fast: 0.3s;
+  --dur-med: 0.65s;
+  --dur-slow: 1.1s;
+
+  --nav-h: 72px;
+
+  /* Survey hairlines */
+  --hairline-dark: rgba(20, 28, 23, 0.14);
+  --hairline-light: rgba(247, 244, 236, 0.16);
+}
+
+[lang='ta'] {
+  --display: var(--font-anek-tamil), var(--font-fraunces), serif;
+  --body: var(--font-anek-tamil), var(--font-archivo), sans-serif;
+}
+
+/* ─── Base ─────────────────────────────────────────────────── */
+
+* {
+  min-width: 0;
+}
+
+html {
+  scroll-behavior: auto; /* Lenis owns scrolling */
+}
+
+body {
+  font-family: var(--body);
+  background: var(--color-ivory-50);
+  color: var(--color-text-strong);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  overflow-x: clip;
+  font-size: 1rem;
+  line-height: 1.7;
+}
+
+::selection {
+  background: var(--color-fern-600);
+  color: var(--color-ivory-50);
+}
+
+/* Reveal targets start hidden only when JS is confirmed running */
+html.js [data-reveal] {
+  opacity: 0;
+}
+html.js [data-lines] .line-inner {
+  transform: translateY(115%);
+}
+html.js [data-hero-fade] {
+  opacity: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html.js [data-reveal] {
+    opacity: 1 !important;
+    transform: none !important;
+  }
+  html.js [data-lines] .line-inner {
+    transform: none !important;
+  }
+  html.js [data-hero-fade] {
+    opacity: 1 !important;
+  }
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* ─── Typography ───────────────────────────────────────────── */
+
+.font-display {
+  font-family: var(--display);
+  font-weight: 380;
+  line-height: 1.06;
+  letter-spacing: -0.015em;
+  font-variation-settings: 'opsz' 108, 'SOFT' 40, 'WONK' 0;
+}
+
+[lang='ta'] .font-display {
+  font-weight: 400;
+  line-height: 1.38;
+  letter-spacing: 0;
+  font-variation-settings: normal;
+}
+
+/* Tamil never takes latin mono tracking — kombu/vowel marks need breathing room */
+[lang='ta'] .font-mono {
+  letter-spacing: 0.05em;
+}
+
+.font-display-italic {
+  font-family: var(--display);
+  font-style: italic;
+  font-weight: 400;
+  font-variation-settings: 'opsz' 72, 'SOFT' 80, 'WONK' 1;
+}
+
+[lang='ta'] .font-display-italic {
+  font-style: normal;
+  font-weight: 500;
+  font-variation-settings: normal;
+}
+
+.text-hero {
+  font-size: clamp(2.35rem, 5vw, 4.3rem);
+}
+.text-h2 {
+  font-size: clamp(2.1rem, 4.1vw, 3.7rem);
+}
+.text-h3 {
+  font-size: clamp(1.4rem, 2.1vw, 1.9rem);
+}
+
+[lang='ta'] .text-hero {
+  font-size: clamp(1.9rem, 4.4vw, 3.7rem);
+}
+[lang='ta'] .text-h2 {
+  font-size: clamp(1.7rem, 3.4vw, 3rem);
+}
+
+/* Survey eyebrow — mono, tracked caps with brass tick */
+.eyebrow {
+  font-family: var(--mono);
+  font-size: 0.7rem;
+  font-weight: 500;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.65rem;
+}
+[lang='ta'] .eyebrow {
+  font-family: var(--body);
+  letter-spacing: 0.06em;
+  font-weight: 600;
+  font-size: 0.78rem;
+}
+.eyebrow::before {
+  content: '';
+  width: 22px;
+  height: 1px;
+  background: currentColor;
+  opacity: 0.55;
+  flex-shrink: 0;
+}
+
+.micro-label {
+  font-family: var(--mono);
+  font-size: 0.62rem;
+  font-weight: 400;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+/* Skip link — visible only on keyboard focus */
+.skip-link {
+  position: fixed;
+  top: 10px;
+  left: 10px;
+  z-index: 1000;
+  padding: 0.6rem 1.1rem;
+  border-radius: 4px;
+  background: var(--color-ink-900);
+  color: var(--color-ivory-50);
+  font-size: 0.85rem;
+  font-weight: 600;
+  transform: translateY(-300%);
+}
+.skip-link:focus-visible {
+  transform: translateY(0);
+}
+
+/* ─── Layout ───────────────────────────────────────────────── */
+
+.container-x {
+  max-width: 82rem;
+  margin-inline: auto;
+  padding-inline: clamp(1.25rem, 5vw, 4.5rem);
+}
+
+.section-pad {
+  padding-block: clamp(4.5rem, 10vw, 8.5rem);
+}
+
+/* ─── Survey motif devices ─────────────────────────────────── */
+
+/* Corner registration ticks (plus-marks) */
+.survey-frame {
+  position: relative;
+}
+.survey-frame::before,
+.survey-frame::after,
+.survey-frame > .tick-b::before,
+.survey-frame > .tick-b::after {
+  content: '';
+  position: absolute;
+  width: 14px;
+  height: 14px;
+  background:
+    linear-gradient(currentColor, currentColor) center/100% 1px no-repeat,
+    linear-gradient(currentColor, currentColor) center/1px 100% no-repeat;
+  opacity: 0.4;
+  pointer-events: none;
+}
+.survey-frame::before {
+  top: -7px;
+  left: -7px;
+}
+.survey-frame::after {
+  top: -7px;
+  right: -7px;
+}
+.survey-frame > .tick-b::before {
+  bottom: -7px;
+  left: -7px;
+}
+.survey-frame > .tick-b::after {
+  bottom: -7px;
+  right: -7px;
+}
+
+/* Blueprint grid wash */
+.blueprint-grid {
+  position: relative;
+}
+.blueprint-grid::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image:
+    linear-gradient(to right, rgba(45, 106, 79, 0.055) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(45, 106, 79, 0.055) 1px, transparent 1px);
+  background-size: 44px 44px;
+  mask-image: radial-gradient(ellipse 90% 80% at 50% 20%, black 30%, transparent 78%);
+}
+
+.blueprint-grid-dark::before {
+  background-image:
+    linear-gradient(to right, rgba(116, 212, 160, 0.05) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(116, 212, 160, 0.05) 1px, transparent 1px);
+}
+
+/* Full plat-paper grid — unmasked, clearly visible; scoped to S.02 only */
+.blueprint-grid-bold::before {
+  background-image:
+    linear-gradient(to right, rgba(45, 106, 79, 0.085) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(45, 106, 79, 0.085) 1px, transparent 1px);
+  mask-image: none;
+}
+
+/* ─── S.03 — the deed stack ────────────────────────────────────
+   Four survey sheets, one per step. Each card pins beneath the nav
+   and the next numbered sheet slides up over it; covered sheets
+   recede (GSAP scales/dims them via scroll — sticky is pure CSS).
+   The material follows the journey: paper → warm paper → fern → ink. */
+
+.process-stack {
+  display: grid;
+  gap: clamp(1.25rem, 3vw, 2.25rem);
+}
+
+.process-card {
+  position: sticky;
+  /* successive sheets rest a touch lower, so the stack reads as a deck */
+  top: calc(var(--nav-h) + 12px + var(--stack-i, 0) * 16px);
+}
+
+.process-card-inner {
+  position: relative;
+  overflow: hidden;
+  border-radius: 6px;
+  min-height: clamp(21rem, 52vh, 27rem);
+  padding: clamp(1.6rem, 3.2vw, 3rem);
+  display: flex;
+  flex-direction: column;
+  transform-origin: 50% 0;
+}
+
+/* Sheet media — the matching chapter still from the client's own film,
+   masked so it lives on the sheet's right edge under the numeral and
+   melts into the card tone toward the copy */
+.process-card-media {
+  position: absolute;
+  inset: 0 0 0 auto;
+  width: min(54%, 620px);
+  -webkit-mask-image: linear-gradient(to left, black 52%, transparent 96%);
+  mask-image: linear-gradient(to left, black 52%, transparent 96%);
+  pointer-events: none;
+}
+@media (max-width: 640px) {
+  .process-card-media {
+    inset: 0;
+    width: 100%;
+    -webkit-mask-image: linear-gradient(to top, transparent 32%, black 78%);
+    mask-image: linear-gradient(to top, transparent 32%, black 78%);
+  }
+}
+
+/* recede-dim painted over covered sheets (GSAP drives opacity) */
+.process-card-dim {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: var(--color-ink-950);
+  opacity: 0;
+  border-radius: inherit;
+}
+
+/* Giant sheet numeral — same plat language as the section eyebrows */
+.process-num {
+  position: absolute;
+  top: clamp(0.5rem, 2vw, 1.5rem);
+  right: clamp(1rem, 3vw, 2.5rem);
+  font-family: var(--display);
+  font-weight: 380;
+  font-size: clamp(6rem, 14vw, 12rem);
+  line-height: 0.8;
+  letter-spacing: -0.04em;
+  color: transparent;
+  -webkit-text-stroke: 1.5px rgba(20, 28, 23, 0.12);
+  pointer-events: none;
+  user-select: none;
+}
+.process-card-dark .process-num {
+  -webkit-text-stroke-color: rgba(247, 244, 236, 0.12);
+}
+
+/* Film grain (SVG turbulence, tiled) */
+.grain::after {
+  content: '';
+  position: absolute;
+  inset: -50%;
+  pointer-events: none;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.72' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-size: 256px 256px;
+  opacity: 0.05;
+  mix-blend-mode: overlay;
+  animation: grain-shift 9s steps(6) infinite;
+}
+
+@keyframes grain-shift {
+  0%, 100% { transform: translate(0, 0); }
+  16% { transform: translate(-4%, 3%); }
+  33% { transform: translate(3%, -5%); }
+  50% { transform: translate(-5%, -2%); }
+  66% { transform: translate(4%, 4%); }
+  83% { transform: translate(-2%, 5%); }
+}
+
+/* Hairline rules */
+.hairline-t {
+  border-top: 1px solid var(--hairline-dark);
+}
+.hairline-b {
+  border-bottom: 1px solid var(--hairline-dark);
+}
+.on-dark .hairline-t,
+.hairline-t-light {
+  border-top-color: var(--hairline-light);
+}
+
+/* Dashed plot boundary */
+.plot-dash {
+  background-image: repeating-linear-gradient(
+    to right,
+    currentColor 0 6px,
+    transparent 6px 12px
+  );
+  height: 1px;
+  opacity: 0.35;
+}
+
+/* ─── Buttons ──────────────────────────────────────────────── */
+
+.btn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
+  padding: 0.95rem 2rem;
+  border-radius: 999px;
+  font-family: var(--body);
+  font-weight: 550;
+  font-size: 0.9rem;
+  letter-spacing: 0.01em;
+  cursor: pointer;
+  overflow: hidden;
+  transition:
+    color var(--dur-fast) var(--ease-soft),
+    border-color var(--dur-fast) var(--ease-soft),
+    background-color var(--dur-fast) var(--ease-soft),
+    transform var(--dur-fast) var(--ease-soft),
+    box-shadow var(--dur-fast) var(--ease-soft);
+  isolation: isolate;
+}
+
+.btn .btn-arrow {
+  transition: transform 0.35s var(--ease-expo);
+}
+.btn:hover .btn-arrow {
+  transform: translateX(4px);
+}
+
+/* fill wipe */
+.btn::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: currentColor;
+  opacity: 0;
+  transform: scaleX(0);
+  transform-origin: left center;
+  transition: transform 0.5s var(--ease-expo), opacity 0.2s;
+  z-index: -1;
+}
+
+.btn-solid {
+  background: var(--color-fern-600);
+  color: #fff;
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.12) inset, 0 10px 28px -12px rgba(27, 67, 50, 0.55);
+}
+.btn-solid:hover {
+  background: var(--color-fern-700);
+  transform: translateY(-2px);
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.1) inset, 0 18px 36px -14px rgba(27, 67, 50, 0.6);
+}
+
+.btn-brass {
+  background: var(--color-brass-200);
+  color: var(--color-ink-900);
+  box-shadow: 0 10px 30px -14px rgba(138, 112, 64, 0.55);
+}
+.btn-brass:hover {
+  background: var(--color-brass-300);
+  transform: translateY(-2px);
+  box-shadow: 0 16px 40px -14px rgba(138, 112, 64, 0.6);
+}
+
+.btn-ghost-light {
+  border: 1px solid rgba(247, 244, 236, 0.32);
+  color: var(--color-ivory-50);
+  background: rgba(247, 244, 236, 0.04);
+  backdrop-filter: blur(10px);
+}
+.btn-ghost-light:hover {
+  border-color: rgba(247, 244, 236, 0.7);
+  background: rgba(247, 244, 236, 0.1);
+}
+
+.btn-ghost-dark {
+  border: 1px solid rgba(20, 28, 23, 0.28);
+  color: var(--color-text-strong);
+  background: transparent;
+}
+.btn-ghost-dark:hover {
+  border-color: var(--color-fern-600);
+  color: var(--color-fern-700);
+  background: rgba(45, 106, 79, 0.05);
+}
+
+/* WhatsApp action stays inside the system — the glyph carries the brand, not neon green */
+.btn-whatsapp {
+  background: var(--color-fern-600);
+  color: #fff;
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.12) inset, 0 10px 28px -14px rgba(27, 67, 50, 0.55);
+}
+.btn-whatsapp:hover {
+  background: var(--color-fern-700);
+  transform: translateY(-2px);
+}
+
+/* ─── Marquee ──────────────────────────────────────────────── */
+
+@keyframes marquee-x {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+.marquee-track {
+  display: flex;
+  width: max-content;
+  animation: marquee-x var(--marquee-dur, 36s) linear infinite;
+}
+.marquee:hover .marquee-track {
+  animation-play-state: paused;
+}
+.marquee-mask {
+  mask-image: linear-gradient(to right, transparent, black 8%, black 92%, transparent);
+}
+
+/* ─── Hero helpers ─────────────────────────────────────────── */
+
+@keyframes nudge-fade {
+  0%, 100% { opacity: 0.35; transform: translateY(0); }
+  50% { opacity: 0.9; transform: translateY(6px); }
+}
+
+.hero-vignette {
+  background:
+    linear-gradient(102deg, rgba(6, 10, 8, 0.62) 0%, rgba(6, 10, 8, 0.24) 46%, rgba(6, 10, 8, 0.05) 72%, transparent 100%),
+    linear-gradient(to top, rgba(6, 10, 8, 0.55) 0%, transparent 26%),
+    linear-gradient(to bottom, rgba(6, 10, 8, 0.42) 0%, transparent 18%);
+}
+
+/* ─── Cards ────────────────────────────────────────────────── */
+
+.card-lift {
+  transition: transform 0.55s var(--ease-expo), box-shadow 0.55s var(--ease-expo), border-color 0.4s;
+}
+.card-lift:hover {
+  transform: translateY(-6px);
+}
+
+/* Brass spotlight that follows cursor (set --mx/--my from JS) */
+.spotlight {
+  position: relative;
+}
+.spotlight::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.5s;
+  background: radial-gradient(
+    420px circle at var(--mx, 50%) var(--my, 50%),
+    rgba(217, 188, 122, 0.14),
+    transparent 55%
+  );
+}
+.spotlight:hover::before {
+  opacity: 1;
+}
+
+/* ─── FAQ accordion ───────────────────────────────────────── */
+
+.faq-answer {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 0.36s var(--ease-soft);
+}
+.faq-item[data-open='true'] .faq-answer {
+  grid-template-rows: 1fr;
+}
+.faq-answer > div {
+  overflow: hidden;
+}
+.faq-answer p {
+  opacity: 0;
+  transition: opacity 0.3s ease 0s;
+}
+.faq-item[data-open='true'] .faq-answer p {
+  opacity: 1;
+  transition-delay: 0.08s;
+}
+
+.faq-icon svg {
+  transition: transform 0.36s var(--ease-soft);
+}
+.faq-item[data-open='true'] .faq-icon svg {
+  transform: rotate(45deg);
+}
+
+/* ─── Scrollbar (subtle, dark-aware) ──────────────────────── */
+
+@media (pointer: fine) {
+  ::-webkit-scrollbar {
+    width: 10px;
+  }
+  ::-webkit-scrollbar-track {
+    background: var(--color-ivory-100);
+  }
+  ::-webkit-scrollbar-thumb {
+    background: color-mix(in srgb, var(--color-fern-600) 55%, var(--color-ivory-200));
+    border-radius: 999px;
+    border: 2px solid var(--color-ivory-100);
+  }
+}
+
+/* ─── Focus rings ──────────────────────────────────────────── */
+
+:focus-visible {
+  outline: 2px solid var(--color-brass-300);
+  outline-offset: 3px;
+  border-radius: 4px;
+}
+
+/* ─── Small-screen tuning ──────────────────────────────────── */
+
+@media (max-width: 480px) {
+  .eyebrow {
+    font-size: 0.62rem;
+    letter-spacing: 0.16em;
+  }
+}
