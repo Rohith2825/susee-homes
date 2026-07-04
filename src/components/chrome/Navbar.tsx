@@ -256,8 +256,6 @@ export default function Navbar() {
     return () => nav.removeEventListener('pointermove', move);
   }, []);
 
-  const otherLocale = locale === 'en' ? 'ta' : 'en';
-
   // Smoky glass over dark content (hero, dark sections, the open sheet),
   // ivory frost over light content.
   const tone: Tone = open ? 'dark' : backdrop;
@@ -467,19 +465,40 @@ export default function Navbar() {
 
               {/* Right cluster */}
               <div className="flex items-center gap-2.5">
-                {/* Language switch */}
-                <Link
-                  href={pathname}
-                  locale={otherLocale}
-                  className={`rounded-full border px-3.5 py-[0.4rem] text-[0.78rem] font-semibold transition-colors duration-300 ${
-                    dark
-                      ? 'border-ivory-50/45 text-ivory-50 hover:border-ivory-50/80 hover:bg-ivory-50/10'
-                      : 'border-fern-600/40 text-fern-700 hover:border-fern-600 hover:bg-fern-600 hover:text-white'
+                {/* Language toggle — a small EN/TA blob that slides to the
+                    active locale; each half links straight to its language. */}
+                <div
+                  className={`relative inline-flex items-center rounded-full border p-[3px] text-[0.7rem] font-semibold leading-none transition-colors duration-300 ${
+                    dark ? 'border-ivory-50/40' : 'border-fern-600/45'
                   }`}
-                  aria-label={otherLocale === 'ta' ? 'தமிழில் காண்க' : 'View in English'}
                 >
-                  {t('langLabel')}
-                </Link>
+                  <span
+                    aria-hidden="true"
+                    className={`pointer-events-none absolute bottom-[3px] left-[3px] top-[3px] w-[1.7rem] rounded-full transition-transform duration-500 [transition-timing-function:var(--ease-expo)] ${
+                      locale === 'ta' ? 'translate-x-full' : 'translate-x-0'
+                    } ${dark ? 'bg-ivory-50' : 'bg-fern-600'}`}
+                  />
+                  {(['en', 'ta'] as const).map((lc) => (
+                    <Link
+                      key={lc}
+                      href={pathname}
+                      locale={lc}
+                      aria-current={locale === lc ? 'true' : undefined}
+                      aria-label={lc === 'ta' ? 'தமிழில் காண்க' : 'View in English'}
+                      className={`relative z-10 w-[1.7rem] py-[0.3rem] text-center uppercase tracking-wide transition-colors duration-300 ${
+                        locale === lc
+                          ? dark
+                            ? 'text-ink-900'
+                            : 'text-white'
+                          : dark
+                            ? 'text-ivory-50/55 hover:text-ivory-50/85'
+                            : 'text-fern-700/70 hover:text-fern-700'
+                      }`}
+                    >
+                      {lc === 'en' ? 'EN' : 'TA'}
+                    </Link>
+                  ))}
+                </div>
 
                 {/* Book visit CTA — desktop. Border on both tones so the box
                     never changes size mid-crossfade. */}
