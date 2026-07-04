@@ -859,6 +859,21 @@ html.is-scrolling .grain::after {
   transform-origin: top left;
 }
 
+/* ─── Stats forge — the record reads off the parcel ─────────── */
+.stat-cell {
+  opacity: 0.32;
+  transition: opacity 0.5s ease;
+}
+.stat-cell[data-state='active'] {
+  opacity: 1;
+}
+.stat-cell[data-state='filed'] {
+  opacity: 0.82;
+}
+.stat-suffix {
+  color: var(--color-brass-600, #b5830a);
+}
+
 /* ─── Preloader — the grand opening ──────────────────────────
    A cinematic ink stage: a breathing survey grid and dual glow,
    a monochrome brand lockup that catches a gold sheen, the name
