@@ -29,7 +29,7 @@ import { ANCHORS } from '@/lib/site';
  * the section to one screen and rests on the final still.
  */
 
-/** Every native frame of the 15.04s / 24fps master (1440px, ~101KB each). */
+/** Every native frame of the 15.04s / 24fps master (1920px, ~212KB each). */
 const FRAME_COUNT = 361;
 const frameSrc = (i: number) => `/hero-frames/scrub/f_${String(i + 1).padStart(3, '0')}.jpg`;
 /** Coarse pass loads every Nth frame first (full-range scrub in ~6MB), then
@@ -152,6 +152,10 @@ export default function Hero() {
     const draw = (index: number) => {
       const img = pickImg(index);
       if (!img) return;
+      // Re-asserted each draw: setting canvas.width/height resets context
+      // state, and 'high' gives the best scaler for any up/down-scale.
+      ctx.imageSmoothingEnabled = true;
+      ctx.imageSmoothingQuality = 'high';
       const cw = canvas.width;
       const ch = canvas.height;
       const iw = img.naturalWidth;
@@ -160,6 +164,24 @@ export default function Hero() {
       const dw = iw * scale;
       const dh = ih * scale;
       ctx.drawImage(img, (cw - dw) / 2, (ch - dh) / 2, dw, dh);
+    };
+
+    // Warm upcoming frames off the main thread so a fast scrub never blocks
+    // on a synchronous decode. Larger 1920px frames make this worthwhile.
+    const decoded = new Set<number>();
+    let prevIdx = 0;
+    const decodeAhead = (idx: number) => {
+      const dir = idx >= prevIdx ? 1 : -1;
+      for (let k = 1; k <= 10; k++) {
+        const j = idx + dir * k;
+        if (j < 0 || j >= FRAME_COUNT) break;
+        const im = frames[j];
+        if (im && im.complete && im.naturalWidth && !decoded.has(j)) {
+          decoded.add(j);
+          im.decode?.().catch(() => decoded.delete(j));
+        }
+      }
+      prevIdx = idx;
     };
 
     const load = (i: number, prio: 'high' | 'low') => {
@@ -179,10 +201,10 @@ export default function Hero() {
     // frame so the water hand-off always lands on the matched still.
     const frameFor = (p: number) => Math.round(clamp01(p / SCRUB_END) * LAST);
 
-    // Source is 1440px, so a DPR-2 backing store is pure upscale + double the
-    // GPU fill for no real detail. Cap at 1.5 — text/CTAs are DOM, unaffected.
+    // 1920px source now has real detail to show, so honour the device pixel
+    // ratio up to 2 — retina panels render the frames crisply instead of soft.
     const resize = () => {
-      const dpr = Math.min(window.devicePixelRatio || 1, 1.5);
+      const dpr = Math.min(window.devicePixelRatio || 1, 2);
       const w = Math.round(canvas.clientWidth * dpr);
       const h = Math.round(canvas.clientHeight * dpr);
       if (w === canvas.width && h === canvas.height) return;
@@ -250,6 +272,7 @@ export default function Hero() {
       if (idx !== lastFrameRef.current) {
         lastFrameRef.current = idx;
         draw(idx);
+        decodeAhead(idx);
       }
 
       applyStage(stageForProgress(p));
