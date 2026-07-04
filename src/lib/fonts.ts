@@ -1,20 +1,30 @@
-import { Sora, Inter, IBM_Plex_Mono, Noto_Sans_Tamil } from 'next/font/google';
+import { DM_Serif_Display, DM_Sans, Cormorant_Garamond, IBM_Plex_Mono, Noto_Sans_Tamil } from 'next/font/google';
 
-/** Architectural display grotesque — confident, engineered, professional.
- *  Carries the headlines and the brand wordmark; pairs naturally with the
- *  site's blueprint / survey language. */
-export const sora = Sora({
+/** Display serif — the exact headline face from suseehomes.com. */
+export const dmSerif = DM_Serif_Display({
   subsets: ['latin'],
-  weight: ['400', '500', '600', '700', '800'],
+  weight: ['400'],
+  style: ['normal', 'italic'],
   display: 'swap',
-  variable: '--font-sora',
+  variable: '--font-dm-serif',
 });
 
-/** Clean, ubiquitous professional grotesque for body + UI. */
-export const inter = Inter({
+/** Body / UI grotesque — matches the live site. Variable (opsz + wght). */
+export const dmSans = DM_Sans({
   subsets: ['latin'],
   display: 'swap',
-  variable: '--font-inter',
+  variable: '--font-dm-sans',
+});
+
+/** Italic accent serif — as loaded on the live site (italic 500/600).
+ *  preload:false — only italic accent text references it. */
+export const cormorant = Cormorant_Garamond({
+  subsets: ['latin'],
+  weight: ['500', '600'],
+  style: ['italic'],
+  display: 'swap',
+  preload: false,
+  variable: '--font-cormorant',
 });
 
 /** Technical mono for survey labels, coordinates, indices. */
@@ -38,8 +48,9 @@ export const notoTamil = Noto_Sans_Tamil({
 });
 
 export const fontVariables = [
-  sora.variable,
-  inter.variable,
+  dmSerif.variable,
+  dmSans.variable,
+  cormorant.variable,
   plexMono.variable,
   notoTamil.variable,
 ].join(' ');

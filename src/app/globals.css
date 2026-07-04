@@ -43,8 +43,8 @@
 
 :root {
   /* Locale-switched font stacks (Tamil overrides in [lang="ta"]) */
-  --display: var(--font-sora), system-ui, sans-serif;
-  --body: var(--font-inter), system-ui, sans-serif;
+  --display: var(--font-dm-serif), 'Georgia', serif;
+  --body: var(--font-dm-sans), system-ui, sans-serif;
   --mono: var(--font-plex-mono), 'SFMono-Regular', monospace;
 
   /* Motion */
@@ -62,8 +62,8 @@
 }
 
 [lang='ta'] {
-  --display: var(--font-noto-tamil), var(--font-sora), sans-serif;
-  --body: var(--font-noto-tamil), var(--font-inter), sans-serif;
+  --display: var(--font-noto-tamil), var(--font-dm-serif), serif;
+  --body: var(--font-noto-tamil), var(--font-dm-sans), sans-serif;
 }
 
 /* ─── Base ─────────────────────────────────────────────────── */
@@ -133,9 +133,9 @@ html.intro-skip .preloader-root {
 
 .font-display {
   font-family: var(--display);
-  font-weight: 600;
-  line-height: 1.04;
-  letter-spacing: -0.022em;
+  font-weight: 400;
+  line-height: 1.06;
+  letter-spacing: -0.01em;
 }
 
 [lang='ta'] .font-display {
@@ -151,7 +151,7 @@ html.intro-skip .preloader-root {
 }
 
 .font-display-italic {
-  font-family: var(--display);
+  font-family: var(--font-cormorant), 'Georgia', serif;
   font-style: italic;
   font-weight: 500;
 }
@@ -411,7 +411,7 @@ html.intro-skip .preloader-root {
   top: clamp(0.5rem, 2vw, 1.5rem);
   right: clamp(1rem, 3vw, 2.5rem);
   font-family: var(--display);
-  font-weight: 380;
+  font-weight: 400;
   font-size: clamp(6rem, 14vw, 12rem);
   line-height: 0.8;
   letter-spacing: -0.04em;
