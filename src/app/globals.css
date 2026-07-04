@@ -915,32 +915,21 @@ html.is-scrolling .grain::after {
   will-change: transform, opacity;
 }
 
-/* The hero logo — white via invert; the light brings it into focus */
+/* The hero logo (white) rising from the foundation line into focus */
 .pl-logo {
-  filter: brightness(0) invert(1);
   will-change: clip-path, filter, transform;
 }
 
-/* Benchmark-light apparatus */
-.pl-beam {
-  transform-origin: top center;
-  will-change: transform, opacity;
-}
-.pl-ruler-h,
-.pl-ruler-v,
-.pl-strap-underline {
+/* Construction reveal — foundation datum line + soft light bloom */
+.pl-foundation {
   transform-origin: center;
   will-change: transform, opacity;
 }
-.pl-reticle,
-.pl-hexring,
-.pl-hexring-echo,
-.pl-lock-ring,
-.pl-impact-ring {
+.pl-bloom {
   will-change: transform, opacity;
 }
 
-/* Corner survey ticks */
+/* Corner blueprint ticks */
 .pl-tick {
   will-change: transform, opacity;
 }
@@ -957,30 +946,15 @@ html.js .pl-glow,
 html.js .pl-tick,
 html.js .pl-coord,
 html.js .pl-est,
-html.js .pl-reticle,
-html.js .pl-lock-ring,
-html.js .pl-impact-flash,
-html.js .pl-impact-ring,
-html.js .pl-hexring,
-html.js .pl-hexring-echo,
+html.js .pl-bloom,
 html.js .pl-sheen,
 html.js .pl-spark {
   opacity: 0;
 }
-html.js .pl-beam {
-  opacity: 0;
-  transform: scaleY(0);
-}
-html.js .pl-ruler-h,
-html.js .pl-strap-underline {
-  transform: scaleX(0);
-}
-html.js .pl-ruler-v {
-  transform: scaleY(0);
-}
+html.js .pl-foundation,
 html.js .pl-progress {
   transform: scaleX(0);
 }
 html.js .pl-logo {
-  clip-path: inset(50% 50% 50% 50%);
+  clip-path: inset(100% 0% 0% 0%);
 }
