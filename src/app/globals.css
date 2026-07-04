@@ -899,38 +899,45 @@ html.is-scrolling .grain::after {
   50% { opacity: 1; transform: scale(1.05); }
 }
 
-/* Gold sheen that sweeps across the brand lockup once */
+/* Gold sheen that sweeps across the logo once, like light on a brass plaque */
 .pl-sheen {
   position: absolute;
-  inset: -40% -60%;
+  inset: -60% -30%;
   background: linear-gradient(
     105deg,
-    transparent 38%,
-    rgba(255, 255, 255, 0.55) 48%,
-    rgba(236, 211, 156, 0.75) 52%,
-    transparent 64%
+    transparent 40%,
+    rgba(255, 255, 255, 0.5) 48%,
+    rgba(236, 211, 156, 0.72) 52%,
+    transparent 62%
   );
   mix-blend-mode: screen;
   pointer-events: none;
-  will-change: transform;
+  will-change: transform, opacity;
 }
 
-/* Name mask — each word rises from behind its own clip */
-.pl-word {
-  display: block;
-  overflow: hidden;
-  padding-bottom: 0.1em;
-  margin-bottom: -0.1em;
-}
-.pl-word-inner {
-  display: block;
-  will-change: transform;
+/* The hero logo — white via invert; the light brings it into focus */
+.pl-logo {
+  filter: brightness(0) invert(1);
+  will-change: clip-path, filter, transform;
 }
 
-/* Glowing sparkle baseline under the name */
-.pl-spark-line {
+/* Benchmark-light apparatus */
+.pl-beam {
+  transform-origin: top center;
+  will-change: transform, opacity;
+}
+.pl-ruler-h,
+.pl-ruler-v,
+.pl-strap-underline {
   transform-origin: center;
-  will-change: transform;
+  will-change: transform, opacity;
+}
+.pl-reticle,
+.pl-hexring,
+.pl-hexring-echo,
+.pl-lock-ring,
+.pl-impact-ring {
+  will-change: transform, opacity;
 }
 
 /* Corner survey ticks */
@@ -939,30 +946,41 @@ html.is-scrolling .grain::after {
 }
 
 /* Pre-animation state — the curtain is server-rendered so it can cover the
-   hero before hydration, but its content must start in each element's GSAP
-   "from" pose (hidden), not settled. Otherwise a refresh flashes a static,
-   fully-composed splash for a frame before the timeline takes over. GSAP
-   overrides these with inline styles the instant it runs. The `js` gate keeps
-   the curtain fully visible if scripts never load. */
+   hero before hydration, but every animated piece must start in its GSAP
+   "from" pose (hidden), or a refresh flashes a composed splash for a frame.
+   GSAP overrides these the instant it runs; the `js` gate keeps the curtain
+   fully visible if scripts never load. */
 html.js .pl-grid {
-  opacity: 0;
+  opacity: 0.05;
 }
-html.js .pl-lockup {
-  opacity: 0;
-}
-html.js .pl-word-inner {
-  transform: translateY(120%);
-}
-html.js .pl-spark-line {
-  transform: scaleX(0);
-}
+html.js .pl-glow,
+html.js .pl-tick,
+html.js .pl-coord,
+html.js .pl-est,
+html.js .pl-reticle,
+html.js .pl-lock-ring,
+html.js .pl-impact-flash,
+html.js .pl-impact-ring,
+html.js .pl-hexring,
+html.js .pl-hexring-echo,
+html.js .pl-sheen,
 html.js .pl-spark {
   opacity: 0;
+}
+html.js .pl-beam {
+  opacity: 0;
+  transform: scaleY(0);
+}
+html.js .pl-ruler-h,
+html.js .pl-strap-underline {
+  transform: scaleX(0);
+}
+html.js .pl-ruler-v {
+  transform: scaleY(0);
 }
 html.js .pl-progress {
   transform: scaleX(0);
 }
-html.js .pl-tick,
-html.js .pl-reg {
-  opacity: 0;
+html.js .pl-logo {
+  clip-path: inset(50% 50% 50% 50%);
 }
