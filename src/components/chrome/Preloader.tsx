@@ -213,7 +213,7 @@ export default function Preloader() {
 
         {/* Sparkle baseline — the surveyor's line catches light and scatters
             into gold dust, in the brand palette (replaces the wordy tagline). */}
-        <div className="pl-spark relative mt-9 flex h-28 w-[min(84vw,580px)] flex-col items-center">
+        <div className="pl-spark relative mt-9 flex h-40 w-[min(86vw,600px)] flex-col items-center">
           {/* glowing baseline — brass core with a fern spark; draws in */}
           <div className="pl-spark-line relative h-[3px] w-full">
             <div className="absolute inset-x-[14%] top-1/2 h-[2px] w-[72%] -translate-y-1/2 bg-gradient-to-r from-transparent via-brass-300 to-transparent blur-[2px]" />
@@ -221,9 +221,10 @@ export default function Preloader() {
             <div className="absolute inset-x-[36%] top-1/2 h-[3px] w-[28%] -translate-y-1/2 bg-gradient-to-r from-transparent via-fern-400 to-transparent blur-[2px]" />
             <div className="absolute inset-x-[36%] top-1/2 h-px w-[28%] -translate-y-1/2 bg-gradient-to-r from-transparent via-fern-300 to-transparent" />
           </div>
-          {/* the sparks scattering below the line, faded into the ink stage */}
-          <div className="relative w-full flex-1 [mask-image:radial-gradient(74%_100%_at_50%_0%,#000_14%,transparent_78%)]">
-            <Sparkles className="h-full w-full" particleColor="#ECD8AE" particleDensity={1300} minSize={0.5} maxSize={1.35} />
+          {/* the sparks emitting out of the line, drifting down + swaying,
+              faded into the ink stage at the edges and the far end */}
+          <div className="relative w-full flex-1 [mask-image:radial-gradient(90%_128%_at_50%_0%,#000_16%,transparent_84%)]">
+            <Sparkles className="h-full w-full" particleColor="#ECD8AE" particleDensity={1500} minSize={0.5} maxSize={1.4} speed={1} />
           </div>
         </div>
       </div>
