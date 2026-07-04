@@ -99,9 +99,18 @@ export default function StatsPlat({ items }: { items: StatItem[] }) {
       if (!w || !h) return;
       canvas.width = Math.round(w * dpr);
       canvas.height = Math.round(h * dpr);
-      sc = Math.min((canvas.width * 0.78) / VW, (canvas.height * 0.55) / VH);
-      ox = canvas.width / 2 - (VW * sc) / 2;
-      oy = canvas.height * 0.38; // sits below the numeral row, clears the labels
+      const mobile = canvas.clientWidth < 768;
+      if (mobile) {
+        // canvas is its own compact block below the numbers → fill + centre it
+        sc = Math.min((canvas.width * 0.96) / VW, (canvas.height * 0.94) / VH);
+        ox = canvas.width / 2 - (VW * sc) / 2;
+        oy = canvas.height / 2 - (VH * sc) / 2;
+      } else {
+        // canvas is the full sticky stage → sit the plan below the numeral row
+        sc = Math.min((canvas.width * 0.78) / VW, (canvas.height * 0.55) / VH);
+        ox = canvas.width / 2 - (VW * sc) / 2;
+        oy = canvas.height * 0.38;
+      }
     };
     const X = (x: number) => ox + x * sc;
     const Y = (y: number) => oy + y * sc;
@@ -291,20 +300,39 @@ export default function StatsPlat({ items }: { items: StatItem[] }) {
       void r;
     };
 
-    const tick = () => {
+    const applyPhase = (p: number) => {
+      if (p === lastPhase) return;
+      lastPhase = p;
+      setNumbers(p);
+      const seg = p < 0.25 ? 0 : p < 0.5 ? 1 : p < 0.75 ? 2 : 3;
+      if (captionRef.current) captionRef.current.textContent = CAPTIONS[seg];
+    };
+
+    // Desktop: the plan scrubs with scroll (sticky stage pins).
+    const tickScrub = () => {
       const p = reduced ? 1 : progress();
       draw(p);
       showTip();
-      if (p !== lastPhase) {
-        lastPhase = p;
-        setNumbers(p);
-        const seg = p < 0.25 ? 0 : p < 0.5 ? 1 : p < 0.75 ? 2 : 3;
-        if (captionRef.current) captionRef.current.textContent = CAPTIONS[seg];
-      }
-      raf = requestAnimationFrame(tick);
+      applyPhase(p);
+      raf = requestAnimationFrame(tickScrub);
     };
 
-    const onResize = () => resize();
+    // Mobile: no full-screen pin — the plan plays through once on scroll-in,
+    // in a compact block, so the section never leaves a big empty screen.
+    const mobile = window.matchMedia('(max-width: 767px)').matches;
+    const DUR = 2600;
+    let startT = 0;
+    let played = false;
+    const tickPlay = (t: number) => {
+      if (!startT) startT = t;
+      const p = reduced ? 1 : clamp01((t - startT) / DUR);
+      draw(p);
+      applyPhase(p);
+      if (p < 1) raf = requestAnimationFrame(tickPlay);
+      else { raf = 0; played = true; }
+    };
+
+    const onResize = () => { resize(); if (mobile && played) draw(1); };
     const onMove = (e: PointerEvent) => {
       const r = canvas.getBoundingClientRect();
       hover.x = (e.clientX - r.left) * dpr;
@@ -316,18 +344,25 @@ export default function StatsPlat({ items }: { items: StatItem[] }) {
     const io = new IntersectionObserver(
       (es) => {
         const vis = es.some((x) => x.isIntersecting);
-        if (vis && !raf) raf = requestAnimationFrame(tick);
-        else if (!vis && raf) { cancelAnimationFrame(raf); raf = 0; }
+        if (mobile) {
+          if (vis && !raf && !played) { startT = 0; raf = requestAnimationFrame(tickPlay); }
+        } else if (vis && !raf) {
+          raf = requestAnimationFrame(tickScrub);
+        } else if (!vis && raf) {
+          cancelAnimationFrame(raf);
+          raf = 0;
+        }
       },
-      { threshold: 0 }
+      { threshold: mobile ? 0.3 : 0 }
     );
 
     const startAll = () => {
       resize();
+      draw(reduced ? 1 : 0);
       setNumbers(reduced ? 1 : 0);
-      io.observe(wrap);
+      io.observe(mobile ? canvas : wrap);
       window.addEventListener('resize', onResize);
-      if (!reduced) {
+      if (!reduced && !mobile) {
         canvas.addEventListener('pointermove', onMove);
         canvas.addEventListener('pointerleave', onLeave);
       }
@@ -345,9 +380,9 @@ export default function StatsPlat({ items }: { items: StatItem[] }) {
   }, [items]);
 
   return (
-    <div ref={wrapRef} className="stats-forge relative h-[260vh] max-lg:h-[210vh]">
-      <div className="sticky top-0 flex h-screen flex-col overflow-hidden supports-[height:100dvh]:h-dvh">
-        <div className="container-x relative z-10 pt-[clamp(4rem,9vh,7rem)]">
+    <div ref={wrapRef} className="stats-forge relative md:h-[260vh]">
+      <div className="relative flex flex-col overflow-hidden pb-12 md:sticky md:top-0 md:h-screen md:pb-0 md:supports-[height:100dvh]:h-dvh">
+        <div className="container-x relative z-10 pt-[clamp(3rem,9vh,7rem)]">
           <span ref={captionRef} className="micro-label mb-6 block text-center text-fern-700/80 sm:mb-8">
             PARCEL BOUNDARY · SURVEYED
           </span>
@@ -365,7 +400,7 @@ export default function StatsPlat({ items }: { items: StatItem[] }) {
           </dl>
         </div>
 
-        <canvas ref={canvasRef} className="absolute inset-0 h-full w-full" aria-hidden="true" />
+        <canvas ref={canvasRef} className="w-full md:absolute md:inset-0 md:h-full max-md:relative max-md:mt-3 max-md:h-[42vh]" aria-hidden="true" />
         <div
           ref={tipRef}
           className="pointer-events-none absolute left-0 top-0 z-20 rounded-sm border border-ink-900/15 bg-ivory-50/95 px-2 py-1 font-mono text-[0.6rem] uppercase tracking-[0.12em] text-ink-900/80 opacity-0 shadow-sm transition-opacity duration-150"
