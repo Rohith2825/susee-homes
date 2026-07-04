@@ -10,22 +10,45 @@ import { CompassRose } from '@/components/ui/icons';
  * THE SCROLL FILM — a scroll-scrubbed 4K frame sequence.
  *
  * The client's 15s master (land → survey lines → streets → homes → dusk
- * arrival at the fountain plaza) is pre-rendered to a 60-frame sequence and
- * painted, frame-accurate, onto a canvas driven purely by scroll position.
- * The hero is a tall section whose inner container is pinned (sticky) while
- * the film scrubs: scroll down runs the film forward, scroll up rewinds it —
- * exactly to your gesture. Four chapters of caption narration cross-fade in
- * sync with the scrub; a live chapter rail, timecode and compass sit on top.
- * Under reduced motion the section collapses to one screen and rests on the
- * final frame with the arrival captions. Frames are preloaded, so the scrub
- * is instant once they land.
+ * arrival at the fountain plaza) is pre-rendered to a 361-frame sequence — the
+ * film's every native 24fps frame — and painted, one crisp frame at a time,
+ * onto a canvas driven purely by scroll position. The hero is a tall section
+ * whose inner container is pinned (sticky) while the film scrubs: scroll down
+ * runs the film forward, scroll up rewinds it — exactly to your gesture.
+ *
+ * Smoothness comes from DENSITY, never from blending two frames (this client
+ * detects a single 50/50 dissolve as a double-exposure ghost). ~6px of scroll
+ * per frame reads as continuous motion; the canvas only ever holds ONE
+ * decoded still, so there is no ghost at any rest position. Frames stream in
+ * coarse-then-dense so the scrub is usable in ~6MB and silently sharpens.
+ *
+ * At the very end the film parks on the fountain plaza and the water keeps
+ * flowing forever: the last still is pixel-identical to the looping fountain
+ * video's first frame, so the swap to live video is a HARD CUT on a matched
+ * pose — invisible, and never a dissolve. Four chapter captions cross-fade in
+ * sync; a live rail, timecode and compass sit on top. Reduced motion collapses
+ * the section to one screen and rests on the final still.
  */
 
-/** 60-frame sequence extracted straight from the 4K master (1440px, ~6MB). */
-const FRAME_COUNT = 60;
+/** Every native frame of the 15.04s / 24fps master (1440px, ~101KB each). */
+const FRAME_COUNT = 361;
 const frameSrc = (i: number) => `/hero-frames/scrub/f_${String(i + 1).padStart(3, '0')}.jpg`;
+/** Coarse pass loads every Nth frame first (full-range scrub in ~6MB), then
+ *  the gaps fill in outward for full density. */
+const COARSE_STEP = 6;
 /** Master runtime (s) — drives the on-screen timecode only. */
 const DURATION = 15.04;
+/** The film reaches its final frame at this progress and holds it to 1.0, so
+ *  the water-loop hand-off always lands on the matched last still. */
+const SCRUB_END = 0.985;
+/** Park zone (hysteresis): flow the fountain video in past ENTER, cut back to
+ *  the still below EXIT. Both sit inside the final-frame hold. */
+const PARK_ENTER = 0.988;
+const PARK_EXIT = 0.972;
+/** The seam-perfected fountain loop (locked camera, flowing water) lives on
+ *  the CDN; its frame 0 is the exact image of the final still f_361. */
+const MEDIA_CDN = 'https://pub-3c0b0885a612406288a53205b2de790a.r2.dev';
+const LOOP_SRC = `${MEDIA_CDN}/fountain-loop-3.mp4`;
 /** Scroll-progress (0–1) at which each chapter's caption begins. Matches the
  *  film's own chapter beats: land · layout · build · arrival. */
 const STAGE_STARTS = [0, 0.17, 0.42, 0.61];
@@ -63,7 +86,8 @@ export default function Hero() {
 
   const sectionRef = useRef<HTMLElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const framesRef = useRef<HTMLImageElement[]>([]);
+  const loopRef = useRef<HTMLVideoElement>(null);
+  const framesRef = useRef<Array<HTMLImageElement | undefined>>([]);
   const stageBoxRef = useRef<HTMLDivElement>(null);
   const nudgeRef = useRef<HTMLDivElement>(null);
   const tcRef = useRef<HTMLSpanElement>(null);
@@ -95,7 +119,9 @@ export default function Hero() {
     };
   }, []);
 
-  // ── The scroll film — preload the sequence, paint the scrubbed frame ──
+  // ── The scroll film — density, not blending. Paint one crisp frame per
+  //    scroll position; stream frames coarse-then-dense; flow the fountain at
+  //    the end via a matched-pose hard cut. ──
   useEffect(() => {
     if (!introReady) return;
     const section = sectionRef.current;
@@ -104,26 +130,24 @@ export default function Hero() {
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
+    const LAST = FRAME_COUNT - 1;
     const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const conn = (navigator as Navigator & { connection?: { saveData?: boolean; effectiveType?: string } }).connection;
+    const saveData = conn?.saveData === true;
+    const slowNet = conn?.effectiveType ? /(^|-)2g/.test(conn.effectiveType) : false;
+    // On Save-Data / very slow links keep only the coarse pass (full-range
+    // scrub in ~6MB) and skip the 17MB fountain video.
+    const coarseOnly = saveData || slowNet;
 
-    // ── Preload every frame. Images are cached, so scrubbing swaps are
-    //    instant; a late-loading target upgrades its fallback on arrival. ──
-    const frames: HTMLImageElement[] = [];
-    for (let i = 0; i < FRAME_COUNT; i++) {
-      const img = new Image();
-      img.decoding = 'async';
-      img.src = frameSrc(i);
-      img.onload = () => {
-        if (i === lastFrameRef.current) draw(i);
-      };
-      frames.push(img);
-    }
+    // Sparse frame store — filled progressively. A hole just means the scrub
+    // falls back to the nearest decoded frame (never a blend, never blank).
+    const frames: Array<HTMLImageElement | undefined> = new Array(FRAME_COUNT);
     framesRef.current = frames;
 
-    /** Nearest already-decoded frame to `index` (keeps the canvas painted
-     *  while the exact frame is still in flight during the first scrub). */
+    /** Nearest already-decoded frame to `index`. Only ONE frame is ever drawn,
+     *  so there is no dissolve and no double-exposure ghost at any position. */
     const pickImg = (index: number): HTMLImageElement | null => {
-      const c = index < 0 ? 0 : index > FRAME_COUNT - 1 ? FRAME_COUNT - 1 : index;
+      const c = index < 0 ? 0 : index > LAST ? LAST : index;
       const exact = frames[c];
       if (exact && exact.complete && exact.naturalWidth) return exact;
       for (let d = 1; d < FRAME_COUNT; d++) {
@@ -148,8 +172,27 @@ export default function Hero() {
       ctx.drawImage(img, (cw - dw) / 2, (ch - dh) / 2, dw, dh);
     };
 
+    const load = (i: number, prio: 'high' | 'low') => {
+      if (frames[i]) return;
+      const img = new Image();
+      img.decoding = 'async';
+      img.setAttribute('fetchpriority', prio);
+      img.onload = () => {
+        // Upgrade the fallback the instant the exact current frame lands.
+        if (i === lastFrameRef.current) draw(i);
+      };
+      img.src = frameSrc(i);
+      frames[i] = img;
+    };
+
+    // Scroll travel maps to [0, SCRUB_END]; the last stretch holds the final
+    // frame so the water hand-off always lands on the matched still.
+    const frameFor = (p: number) => Math.round(clamp01(p / SCRUB_END) * LAST);
+
+    // Source is 1440px, so a DPR-2 backing store is pure upscale + double the
+    // GPU fill for no real detail. Cap at 1.5 — text/CTAs are DOM, unaffected.
     const resize = () => {
-      const dpr = Math.min(window.devicePixelRatio || 1, 2);
+      const dpr = Math.min(window.devicePixelRatio || 1, 1.5);
       const w = Math.round(canvas.clientWidth * dpr);
       const h = Math.round(canvas.clientHeight * dpr);
       if (w === canvas.width && h === canvas.height) return;
@@ -165,15 +208,12 @@ export default function Hero() {
       }
     };
 
-    // ── Reduced motion: rest on the final frame, arrival captions, free scroll ──
+    // ── Reduced motion: only the final still, one screen, free scroll ──
     if (reduced) {
+      load(LAST, 'high');
       applyStage(3);
-      lastFrameRef.current = FRAME_COUNT - 1;
+      lastFrameRef.current = LAST;
       resize();
-      const last = frames[FRAME_COUNT - 1];
-      const paint = () => draw(FRAME_COUNT - 1);
-      if (last.complete && last.naturalWidth) paint();
-      else last.onload = paint;
       railFillRefs.current.forEach((el) => {
         if (el) el.style.transform = 'scaleY(1)';
       });
@@ -183,7 +223,31 @@ export default function Hero() {
       return () => window.removeEventListener('resize', resize);
     }
 
-    // ── Scrub: map scroll position → frame + chapter + rail + timecode ──
+    // ── Coarse pass: full-range scrub in ~6MB, immediately ──
+    for (let i = 0; i < FRAME_COUNT; i += COARSE_STEP) load(i, 'high');
+    load(LAST, 'high');
+    // ── Dense fill: the in-between frames, deferred + low priority ──
+    if (!coarseOnly) {
+      const fill = () => {
+        for (let i = 0; i < FRAME_COUNT; i++) if (!frames[i]) load(i, 'low');
+      };
+      const ric = (window as Window & { requestIdleCallback?: (cb: () => void, o?: { timeout: number }) => void }).requestIdleCallback;
+      if (ric) ric(fill, { timeout: 1500 });
+      else setTimeout(fill, 500);
+    }
+
+    // ── Fountain water — hard-cut to the looping video when parked at the end ──
+    const loop = loopRef.current;
+    const loopEnabled = !!loop && !saveData;
+    let primed = false;
+    let parked = false;
+    const unpark = () => {
+      if (!parked || !loop) return;
+      parked = false;
+      loop.style.opacity = '0';
+      loop.pause();
+    };
+
     const progress = () => {
       const total = section.offsetHeight - window.innerHeight;
       if (total <= 0) return 0;
@@ -193,7 +257,7 @@ export default function Hero() {
     const tick = () => {
       const p = progress();
 
-      const idx = Math.round(p * (FRAME_COUNT - 1));
+      const idx = frameFor(p);
       if (idx !== lastFrameRef.current) {
         lastFrameRef.current = idx;
         draw(idx);
@@ -209,8 +273,35 @@ export default function Hero() {
         el.style.transform = `scaleY(${clamp01((p - start) / (end - start))})`;
       }
 
-      if (tcRef.current) tcRef.current.textContent = `T+${formatTC(p * DURATION)} · ${formatTC(DURATION)}`;
+      const tp = clamp01(p / SCRUB_END);
+      if (tcRef.current) tcRef.current.textContent = `T+${formatTC(tp * DURATION)} · ${formatTC(DURATION)}`;
       if (nudgeRef.current) nudgeRef.current.style.opacity = p > 0.015 ? '0' : '';
+
+      if (loopEnabled && loop) {
+        // Warm the ~17MB loop before the user reaches the end.
+        if (!primed && p > 0.55) {
+          primed = true;
+          loop.preload = 'auto';
+          try {
+            loop.load();
+          } catch {
+            /* ignore */
+          }
+        }
+        if (!parked && p >= PARK_ENTER) {
+          // Canvas is on f_361 == the loop's frame 0, so this is invisible.
+          parked = true;
+          try {
+            loop.currentTime = 0;
+          } catch {
+            /* ignore */
+          }
+          loop.play().catch(() => {});
+          loop.style.opacity = '1';
+        } else if (parked && p < PARK_EXIT) {
+          unpark();
+        }
+      }
 
       rafRef.current = requestAnimationFrame(tick);
     };
@@ -224,6 +315,7 @@ export default function Hero() {
         } else if (!visible && rafRef.current) {
           cancelAnimationFrame(rafRef.current);
           rafRef.current = 0;
+          if (loop) loop.pause(); // don't decode video off-screen
         }
       },
       { threshold: 0 }
@@ -238,6 +330,13 @@ export default function Hero() {
       if (rafRef.current) cancelAnimationFrame(rafRef.current);
       rafRef.current = 0;
       window.removeEventListener('resize', resize);
+      if (loop) {
+        try {
+          loop.pause();
+        } catch {
+          /* ignore */
+        }
+      }
     };
   }, [introReady]);
 
@@ -310,6 +409,22 @@ export default function Hero() {
           ref={canvasRef}
           aria-hidden="true"
           className="pointer-events-none absolute inset-0 block h-full w-full"
+        />
+
+        {/* Flowing ending — the seam-perfected fountain loop. Its frame 0 is
+            pixel-identical to the final still f_361, so it hard-cuts in over
+            the canvas the instant the scrub parks at the end (no dissolve),
+            and the water then flows forever. Idle (opacity 0, paused) until
+            then; lazy-loaded as the scrub passes the mid-point. */}
+        <video
+          ref={loopRef}
+          src={LOOP_SRC}
+          muted
+          loop
+          playsInline
+          preload="none"
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-0 h-full w-full object-cover opacity-0"
         />
 
         {/* Cinematic grade — the film's golden light still leads, but the
