@@ -915,9 +915,14 @@ html.is-scrolling .grain::after {
   will-change: transform, opacity;
 }
 
-/* The hero logo (white) rising from the foundation line into focus */
+/* The hero logo (white) — locks in crisp over the assembled particles */
 .pl-logo {
-  will-change: clip-path, filter, transform;
+  will-change: opacity, filter, transform;
+}
+
+/* Forge canvas — the plot-grid that streams into the mark */
+.pl-forge {
+  pointer-events: none;
 }
 
 /* Construction reveal — foundation datum line + soft light bloom */
@@ -948,13 +953,10 @@ html.js .pl-coord,
 html.js .pl-est,
 html.js .pl-bloom,
 html.js .pl-sheen,
-html.js .pl-spark {
+html.js .pl-logo {
   opacity: 0;
 }
 html.js .pl-foundation,
 html.js .pl-progress {
   transform: scaleX(0);
-}
-html.js .pl-logo {
-  clip-path: inset(100% 0% 0% 0%);
 }
