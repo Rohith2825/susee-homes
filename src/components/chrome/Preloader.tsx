@@ -1,8 +1,8 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { useTranslations } from 'next-intl';
 import { gsap } from 'gsap';
+import { Sparkles } from '@/components/ui/sparkles';
 
 declare global {
   interface Window {
@@ -40,7 +40,6 @@ export default function Preloader() {
   const [gone, setGone] = useState(() => typeof window !== 'undefined' && splashConsumed);
   const rootRef = useRef<HTMLDivElement>(null);
   const countRef = useRef<HTMLSpanElement>(null);
-  const t = useTranslations('preloader');
 
   useEffect(() => {
     const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -102,15 +101,10 @@ export default function Preloader() {
         { yPercent: 0, y: 0, duration: 1, stagger: 0.12, ease: 'power4.out' },
         0.95
       )
-      // tagline spaces open
-      .fromTo(
-        q('.pl-tagline'),
-        { opacity: 0, letterSpacing: '0.02em' },
-        { opacity: 1, letterSpacing: '0.34em', duration: 1, ease: 'power2.out' },
-        1.5
-      )
-      // surveyor's baseline draws under the name
-      .fromTo(q('.pl-rule'), { scaleX: 0 }, { scaleX: 1, duration: 1.1, ease: 'power2.inOut' }, 1.1)
+      // glowing baseline draws in under the name
+      .fromTo(q('.pl-spark-line'), { scaleX: 0 }, { scaleX: 1, duration: 1.1, ease: 'power2.inOut' }, 1.1)
+      // the sparks bloom up
+      .fromTo(q('.pl-spark'), { opacity: 0 }, { opacity: 1, duration: 1.1, ease: 'power2.out' }, 1.35)
       // counter + bottom progress run together
       .to(
         counter,
@@ -217,13 +211,21 @@ export default function Preloader() {
           </span>
         </h1>
 
-        {/* Surveyor's baseline */}
-        <div className="pl-rule mt-8 h-px w-[min(78vw,540px)] bg-gradient-to-r from-transparent via-brass-300/70 to-transparent" />
-
-        {/* Tagline */}
-        <p className="pl-tagline mt-6 font-mono text-[0.62rem] uppercase text-fern-500/90 sm:text-[0.7rem]">
-          {t('tagline')}
-        </p>
+        {/* Sparkle baseline — the surveyor's line catches light and scatters
+            into gold dust, in the brand palette (replaces the wordy tagline). */}
+        <div className="pl-spark relative mt-9 flex h-28 w-[min(84vw,580px)] flex-col items-center">
+          {/* glowing baseline — brass core with a fern spark; draws in */}
+          <div className="pl-spark-line relative h-[3px] w-full">
+            <div className="absolute inset-x-[14%] top-1/2 h-[2px] w-[72%] -translate-y-1/2 bg-gradient-to-r from-transparent via-brass-300 to-transparent blur-[2px]" />
+            <div className="absolute inset-x-[14%] top-1/2 h-px w-[72%] -translate-y-1/2 bg-gradient-to-r from-transparent via-brass-100 to-transparent" />
+            <div className="absolute inset-x-[36%] top-1/2 h-[3px] w-[28%] -translate-y-1/2 bg-gradient-to-r from-transparent via-fern-400 to-transparent blur-[2px]" />
+            <div className="absolute inset-x-[36%] top-1/2 h-px w-[28%] -translate-y-1/2 bg-gradient-to-r from-transparent via-fern-300 to-transparent" />
+          </div>
+          {/* the sparks scattering below the line, faded into the ink stage */}
+          <div className="relative w-full flex-1 [mask-image:radial-gradient(74%_100%_at_50%_0%,#000_14%,transparent_78%)]">
+            <Sparkles className="h-full w-full" particleColor="#ECD8AE" particleDensity={1300} minSize={0.5} maxSize={1.35} />
+          </div>
+        </div>
       </div>
 
       {/* Bottom furniture — counter + progress baseline */}

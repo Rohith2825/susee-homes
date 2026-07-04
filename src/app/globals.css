@@ -43,8 +43,8 @@
 
 :root {
   /* Locale-switched font stacks (Tamil overrides in [lang="ta"]) */
-  --display: var(--font-fraunces), 'Georgia', serif;
-  --body: var(--font-archivo), system-ui, sans-serif;
+  --display: var(--font-sora), system-ui, sans-serif;
+  --body: var(--font-inter), system-ui, sans-serif;
   --mono: var(--font-plex-mono), 'SFMono-Regular', monospace;
 
   /* Motion */
@@ -62,8 +62,8 @@
 }
 
 [lang='ta'] {
-  --display: var(--font-noto-tamil), var(--font-fraunces), serif;
-  --body: var(--font-noto-tamil), var(--font-archivo), sans-serif;
+  --display: var(--font-noto-tamil), var(--font-sora), sans-serif;
+  --body: var(--font-noto-tamil), var(--font-inter), sans-serif;
 }
 
 /* ─── Base ─────────────────────────────────────────────────── */
@@ -133,10 +133,9 @@ html.intro-skip .preloader-root {
 
 .font-display {
   font-family: var(--display);
-  font-weight: 380;
-  line-height: 1.06;
-  letter-spacing: -0.015em;
-  font-variation-settings: 'opsz' 108, 'SOFT' 40, 'WONK' 0;
+  font-weight: 600;
+  line-height: 1.04;
+  letter-spacing: -0.022em;
 }
 
 [lang='ta'] .font-display {
@@ -154,8 +153,7 @@ html.intro-skip .preloader-root {
 .font-display-italic {
   font-family: var(--display);
   font-style: italic;
-  font-weight: 400;
-  font-variation-settings: 'opsz' 72, 'SOFT' 80, 'WONK' 1;
+  font-weight: 500;
 }
 
 [lang='ta'] .font-display-italic {
@@ -929,8 +927,8 @@ html.is-scrolling .grain::after {
   will-change: transform;
 }
 
-/* Surveyor's baseline under the name */
-.pl-rule {
+/* Glowing sparkle baseline under the name */
+.pl-spark-line {
   transform-origin: center;
   will-change: transform;
 }
@@ -955,10 +953,10 @@ html.js .pl-lockup {
 html.js .pl-word-inner {
   transform: translateY(120%);
 }
-html.js .pl-rule {
+html.js .pl-spark-line {
   transform: scaleX(0);
 }
-html.js .pl-tagline {
+html.js .pl-spark {
   opacity: 0;
 }
 html.js .pl-progress {

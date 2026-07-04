@@ -1,28 +1,20 @@
-import { Fraunces, Archivo, IBM_Plex_Mono, Noto_Sans_Tamil, Playfair_Display } from 'next/font/google';
+import { Sora, Inter, IBM_Plex_Mono, Noto_Sans_Tamil } from 'next/font/google';
 
-/** Editorial display serif — warm, architectural, ownable. */
-export const fraunces = Fraunces({
+/** Architectural display grotesque — confident, engineered, professional.
+ *  Carries the headlines and the brand wordmark; pairs naturally with the
+ *  site's blueprint / survey language. */
+export const sora = Sora({
   subsets: ['latin'],
+  weight: ['400', '500', '600', '700', '800'],
   display: 'swap',
-  variable: '--font-fraunces',
-  axes: ['opsz', 'SOFT', 'WONK'],
+  variable: '--font-sora',
 });
 
-/** High-contrast display serif for the oversized signature wordmark.
- *  preload:false — only the footer monogram uses it. */
-export const playfair = Playfair_Display({
-  subsets: ['latin'],
-  weight: ['500', '600', '700'],
-  display: 'swap',
-  preload: false,
-  variable: '--font-playfair',
-});
-
-/** Grotesque for body/UI. */
-export const archivo = Archivo({
+/** Clean, ubiquitous professional grotesque for body + UI. */
+export const inter = Inter({
   subsets: ['latin'],
   display: 'swap',
-  variable: '--font-archivo',
+  variable: '--font-inter',
 });
 
 /** Technical mono for survey labels, coordinates, indices. */
@@ -46,9 +38,8 @@ export const notoTamil = Noto_Sans_Tamil({
 });
 
 export const fontVariables = [
-  fraunces.variable,
-  playfair.variable,
-  archivo.variable,
+  sora.variable,
+  inter.variable,
   plexMono.variable,
   notoTamil.variable,
 ].join(' ');

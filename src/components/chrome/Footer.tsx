@@ -94,7 +94,7 @@ export default async function Footer() {
         >
           <div
             className="footer-mark group relative select-none text-center leading-none"
-            style={{ fontFamily: 'var(--font-playfair), Georgia, serif', fontWeight: 600 }}
+            style={{ fontFamily: 'var(--font-sora), system-ui, sans-serif', fontWeight: 700 }}
           >
             {/* pt keeps the tall caps' stroke from clipping; -mb trims the
                 serif's unused descender whitespace so the band isn't empty.
