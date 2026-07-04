@@ -4,7 +4,6 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { gsap } from 'gsap';
 import { ANCHORS } from '@/lib/site';
-import { CompassRose } from '@/components/ui/icons';
 
 /**
  * THE SCROLL FILM — a scroll-scrubbed 4K frame sequence.
@@ -36,8 +35,6 @@ const frameSrc = (i: number) => `/hero-frames/scrub/f_${String(i + 1).padStart(3
 /** Coarse pass loads every Nth frame first (full-range scrub in ~6MB), then
  *  the gaps fill in outward for full density. */
 const COARSE_STEP = 6;
-/** Master runtime (s) — drives the on-screen timecode only. */
-const DURATION = 15.04;
 /** The film reaches its final frame at this progress and holds it to 1.0, so
  *  the water-loop hand-off always lands on the matched last still. */
 const SCRUB_END = 0.985;
@@ -64,12 +61,6 @@ interface Chapter {
   label: string;
 }
 
-function formatTC(s: number): string {
-  const m = Math.floor(s / 60);
-  const ss = Math.floor(s % 60);
-  return `${String(m).padStart(2, '0')}:${String(ss).padStart(2, '0')}`;
-}
-
 const clamp01 = (v: number) => (v < 0 ? 0 : v > 1 ? 1 : v);
 
 /** Which chapter a given scroll progress falls in. */
@@ -90,7 +81,6 @@ export default function Hero() {
   const framesRef = useRef<Array<HTMLImageElement | undefined>>([]);
   const stageBoxRef = useRef<HTMLDivElement>(null);
   const nudgeRef = useRef<HTMLDivElement>(null);
-  const tcRef = useRef<HTMLSpanElement>(null);
   const railFillRefs = useRef<Array<HTMLDivElement | null>>([]);
   const rafRef = useRef(0);
   const lastFrameRef = useRef(-1);
@@ -217,7 +207,6 @@ export default function Hero() {
       railFillRefs.current.forEach((el) => {
         if (el) el.style.transform = 'scaleY(1)';
       });
-      if (tcRef.current) tcRef.current.textContent = `T+${formatTC(DURATION)} · ${formatTC(DURATION)}`;
       if (nudgeRef.current) nudgeRef.current.style.opacity = '0';
       window.addEventListener('resize', resize);
       return () => window.removeEventListener('resize', resize);
@@ -273,8 +262,6 @@ export default function Hero() {
         el.style.transform = `scaleY(${clamp01((p - start) / (end - start))})`;
       }
 
-      const tp = clamp01(p / SCRUB_END);
-      if (tcRef.current) tcRef.current.textContent = `T+${formatTC(tp * DURATION)} · ${formatTC(DURATION)}`;
       if (nudgeRef.current) nudgeRef.current.style.opacity = p > 0.015 ? '0' : '';
 
       if (loopEnabled && loop) {
@@ -441,15 +428,6 @@ export default function Hero() {
           }}
         />
 
-        {/* ── Survey micro-labels (top) ── */}
-        <div
-          data-hero-fade=""
-          className="pointer-events-none absolute inset-x-0 top-[calc(var(--nav-h)+18px)] hidden justify-between px-[clamp(1.5rem,5vw,4.5rem)] md:flex"
-        >
-          <span className="micro-label text-ivory-50/85 [text-shadow:0_1px_10px_rgba(6,10,8,0.85)]">{t('coordinates')}</span>
-          <span className="micro-label text-ivory-50/85 [text-shadow:0_1px_10px_rgba(6,10,8,0.85)]">{t('location')}</span>
-        </div>
-
         {/* ── Caption ── */}
         <div className="absolute inset-0 flex items-end pb-[15dvh] md:items-center md:pb-0">
           <div className="w-full px-[clamp(1.5rem,6vw,5rem)]">
@@ -550,19 +528,6 @@ export default function Hero() {
           ))}
         </div>
 
-        {/* ── Bottom furniture ── */}
-        <div
-          data-hero-fade=""
-          className="pointer-events-none absolute bottom-7 left-[clamp(1.5rem,6vw,5rem)] hidden items-baseline gap-5 [text-shadow:0_1px_10px_rgba(6,10,8,0.8)] md:flex"
-        >
-          <span className="font-mono text-[0.72rem] tracking-[0.2em] text-ivory-50/78 tabular-nums">
-            {chapters[activeIdx]?.index ?? '01'} / 04
-          </span>
-          <span ref={tcRef} className="font-mono text-[0.62rem] tracking-[0.16em] text-ivory-50/60 tabular-nums">
-            T+00:00 · 00:15
-          </span>
-        </div>
-
         <div
           ref={nudgeRef}
           data-hero-fade=""
@@ -574,13 +539,6 @@ export default function Hero() {
               <path d="M7 1v12M4 10l3 3 3-3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
             </svg>
           </span>
-        </div>
-
-        <div
-          data-hero-fade=""
-          className="pointer-events-none absolute bottom-6 right-[clamp(1.5rem,4vw,4rem)] hidden text-ivory-50/70 drop-shadow-[0_1px_10px_rgba(6,10,8,0.6)] md:block"
-        >
-          <CompassRose size={46} />
         </div>
       </div>
     </section>

@@ -3,8 +3,14 @@
 import dynamic from 'next/dynamic';
 import { useEffect, useRef, useState } from 'react';
 import type { HyperspeedOptions } from '@/components/ui/hyperspeed';
+import { ErrorBoundary } from '@/components/ui/ErrorBoundary';
 
-const Hyperspeed = dynamic(() => import('@/components/ui/hyperspeed'), { ssr: false });
+// One retry so a single flaky chunk fetch recovers on its own; a hard failure
+// falls through to the ErrorBoundary below rather than crashing the page.
+const Hyperspeed = dynamic(
+  () => import('@/components/ui/hyperspeed').catch(() => import('@/components/ui/hyperspeed')),
+  { ssr: false }
+);
 
 /**
  * Themed Hyperspeed options — an ink-green dusk road: brass tail lights
@@ -78,7 +84,11 @@ export default function CtaScene() {
 
   return (
     <div ref={hostRef} className="absolute inset-0 z-0" aria-hidden="true">
-      {near && !reducedMotion ? <Hyperspeed effectOptions={EFFECT_OPTIONS} /> : null}
+      {near && !reducedMotion ? (
+        <ErrorBoundary fallback={null}>
+          <Hyperspeed effectOptions={EFFECT_OPTIONS} />
+        </ErrorBoundary>
+      ) : null}
     </div>
   );
 }
