@@ -1,6 +1,6 @@
 import { getTranslations } from 'next-intl/server';
 import Eyebrow from '@/components/ui/Eyebrow';
-import StatsForge from '@/components/sections/StatsForge';
+import StatsPlat from '@/components/sections/StatsPlat';
 
 interface StatItem {
   num: string;
@@ -28,7 +28,7 @@ export default async function Stats() {
         </div>
       </div>
 
-      <StatsForge items={items} />
+      <StatsPlat items={items} />
     </section>
   );
 }
