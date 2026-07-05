@@ -5,7 +5,7 @@ import Image from 'next/image';
 import { useLocale, useTranslations } from 'next-intl';
 import { Link, usePathname } from '@/i18n/navigation';
 import { ANCHORS, SITE, waLink } from '@/lib/site';
-import { PhoneIcon, WhatsAppIcon } from '@/components/ui/icons';
+import { GlobeIcon, PhoneIcon, WhatsAppIcon } from '@/components/ui/icons';
 import './navbar.css';
 
 const NAV_ITEMS = [
@@ -261,6 +261,9 @@ export default function Navbar() {
   const tone: Tone = open ? 'dark' : backdrop;
   const dark = tone === 'dark';
 
+  // Language switch: tap goes straight to the OTHER language (only two exist).
+  const otherLocale = locale === 'en' ? 'ta' : 'en';
+
   // Bake the droplet map to the pill's exact geometry; rebuild (debounced)
   // when the capsule resizes. Chromium-only — url() backdrop filters
   // silently fail elsewhere, so other engines keep the frost.
@@ -465,40 +468,43 @@ export default function Navbar() {
 
               {/* Right cluster */}
               <div className="flex items-center gap-2.5">
-                {/* Language toggle — a small EN/TA blob that slides to the
-                    active locale; each half links straight to its language. */}
-                <div
-                  className={`relative inline-flex items-center rounded-full border p-[3px] text-[0.7rem] font-semibold leading-none transition-colors duration-300 ${
-                    dark ? 'border-ivory-50/40' : 'border-fern-600/45'
+                {/* Language switch — one tap to the OTHER language, named in
+                    its own script. The globe turns and the name underlines on
+                    hover; on English pages the Tamil word loads Noto Tamil. */}
+                <Link
+                  href={pathname}
+                  locale={otherLocale}
+                  hrefLang={otherLocale}
+                  aria-label={otherLocale === 'ta' ? 'Switch to Tamil' : 'Switch to English'}
+                  className={`lang-flip group relative inline-flex items-center gap-[0.4rem] rounded-full border py-[0.4rem] pl-2 pr-2.5 text-[0.8rem] font-medium leading-none transition-colors duration-300 ${
+                    dark
+                      ? 'border-ivory-50/25 text-ivory-50/80 hover:border-ivory-50/55 hover:text-white'
+                      : 'border-fern-600/30 text-fern-800/85 hover:border-fern-600/60 hover:text-fern-800'
                   }`}
                 >
-                  <span
-                    aria-hidden="true"
-                    className={`pointer-events-none absolute bottom-[3px] left-[3px] top-[3px] w-[1.7rem] rounded-full transition-transform duration-500 [transition-timing-function:var(--ease-expo)] ${
-                      locale === 'ta' ? 'translate-x-full' : 'translate-x-0'
-                    } ${dark ? 'bg-ivory-50' : 'bg-fern-600'}`}
+                  <GlobeIcon
+                    size={15}
+                    className="shrink-0 transition-transform duration-[650ms] [transition-timing-function:var(--ease-expo)] group-hover:rotate-[360deg]"
                   />
-                  {(['en', 'ta'] as const).map((lc) => (
-                    <Link
-                      key={lc}
-                      href={pathname}
-                      locale={lc}
-                      aria-current={locale === lc ? 'true' : undefined}
-                      aria-label={lc === 'ta' ? 'தமிழில் காண்க' : 'View in English'}
-                      className={`relative z-10 w-[1.7rem] py-[0.3rem] text-center uppercase tracking-wide transition-colors duration-300 ${
-                        locale === lc
-                          ? dark
-                            ? 'text-ink-900'
-                            : 'text-white'
-                          : dark
-                            ? 'text-ivory-50/55 hover:text-ivory-50/85'
-                            : 'text-fern-700/70 hover:text-fern-700'
+                  <span
+                    lang={otherLocale}
+                    style={{
+                      fontFamily:
+                        otherLocale === 'ta'
+                          ? 'var(--font-noto-tamil), var(--font-dm-sans), sans-serif'
+                          : 'var(--font-dm-sans), sans-serif',
+                    }}
+                    className="relative whitespace-nowrap"
+                  >
+                    {otherLocale === 'ta' ? 'தமிழ்' : 'English'}
+                    <span
+                      aria-hidden
+                      className={`absolute -bottom-[3px] left-0 h-px w-full origin-left scale-x-0 transition-transform duration-500 [transition-timing-function:var(--ease-expo)] group-hover:scale-x-100 ${
+                        dark ? 'bg-brass-200' : 'bg-brass-500'
                       }`}
-                    >
-                      {lc === 'en' ? 'EN' : 'TA'}
-                    </Link>
-                  ))}
-                </div>
+                    />
+                  </span>
+                </Link>
 
                 {/* Book visit CTA — desktop. Border on both tones so the box
                     never changes size mid-crossfade. */}

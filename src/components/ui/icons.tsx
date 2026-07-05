@@ -33,6 +33,18 @@ export function ArrowUpRight({ size = 14, className }: { size?: number; classNam
   );
 }
 
+/** Meridian globe — the language switch. Survey-flavoured: the equator and
+ *  meridian read like a plotted grid wrapped onto a sphere. */
+export function GlobeIcon({ size = 15, className }: { size?: number; className?: string }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.3" className={className} aria-hidden="true">
+      <circle cx="8" cy="8" r="6.3" />
+      <path d="M1.7 8h12.6" strokeWidth="1" />
+      <ellipse cx="8" cy="8" rx="3.1" ry="6.3" strokeWidth="1" />
+    </svg>
+  );
+}
+
 /** Plot-grid glyph for the plotted-developments pillar. */
 export function PlotIcon({ size = 30 }: { size?: number }) {
   return (
